@@ -1,0 +1,165 @@
+{
+  "nav": {
+    "skipToContent": "Skip to content",
+    "home": "Home",
+    "about": "About AGM",
+    "services": "Services",
+    "projects": "Projects",
+    "method": "Method",
+    "contact": "Contact",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "menu": "Menu",
+    "primaryLabel": "Main navigation",
+    "mobileLabel": "Mobile navigation",
+    "footerLabel": "Footer navigation"
+  },
+  "theme": {
+    "label": "Theme",
+    "toggle": "Switch theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "language": {
+    "label": "Language",
+    "switchTo": "Switch to {language}",
+    "es": "Español",
+    "en": "English"
+  },
+  "hero": {
+    "scrollHint": "Scroll to explore"
+  },
+  "about": {
+    "eyebrow": "About AGM",
+    "title": "Architecture that answers to how a space is actually lived in",
+    "philosophyLabel": "Our philosophy",
+    "pendingInfo": "Biographical details pending confirmation from the practice."
+  },
+  "services": {
+    "eyebrow": "Services",
+    "title": "What we do",
+    "intro": "We cover the full cycle of a project: from the initial idea and its technical documentation through construction and ongoing maintenance.",
+    "cta": "Request a quote"
+  },
+  "projects": {
+    "eyebrow": "Projects",
+    "title": "Selected projects",
+    "intro": "A sample of the kind of work we develop and the criteria we bring to every commission.",
+    "conceptBadge": "Concept project",
+    "conceptNotice": "The projects below are conceptual proposals created to illustrate how the practice works. They do not represent work built by AGM.",
+    "viewDetail": "View project",
+    "backToProjects": "Back to projects",
+    "empty": "No projects published yet.",
+    "meta": {
+      "category": "Category",
+      "location": "Location",
+      "year": "Year",
+      "client": "Client",
+      "area": "Area"
+    },
+    "gallery": "Gallery",
+    "filters": {
+      "all": "All"
+    },
+    "categories": {
+      "residential": "Residential",
+      "commercial": "Commercial",
+      "remodeling": "Remodeling",
+      "maintenance": "Maintenance",
+      "executive": "Construction documents",
+      "other": "Other"
+    }
+  },
+  "method": {
+    "eyebrow": "Method",
+    "title": "Our method",
+    "intro": "Six stages that structure the work and make the outcome predictable. None of them gets skipped.",
+    "cta": "See our method"
+  },
+  "values": {
+    "eyebrow": "Philosophy",
+    "title": "How we work"
+  },
+  "contact": {
+    "eyebrow": "Contact",
+    "title": "Let us transform your space",
+    "intro": "Tell us about your project and we will find the right solution together.",
+    "phone": "Phone",
+    "email": "Email",
+    "facebook": "Facebook",
+    "whatsapp": "Chat on WhatsApp",
+    "location": "Location",
+    "locationPending": "Location pending confirmation",
+    "directLabel": "Direct contact",
+    "facebookPending": "Facebook link pending"
+  },
+  "form": {
+    "legend": "Quote request form",
+    "name": "Name",
+    "namePlaceholder": "Your full name",
+    "email": "Email",
+    "emailPlaceholder": "name@email.com",
+    "phone": "Phone",
+    "phonePlaceholder": "10 digits",
+    "phoneOptional": "optional",
+    "projectType": "Project type",
+    "projectTypePlaceholder": "Select an option",
+    "message": "Message",
+    "messagePlaceholder": "Tell us what you need, where the property is and the timeline you have in mind.",
+    "submit": "Request a quote",
+    "submitting": "Sending…",
+    "required": "required",
+    "successTitle": "Message sent",
+    "successBody": "Thanks for writing. We will reply to the email address you gave us.",
+    "sendAnother": "Send another message",
+    "errorTitle": "Could not send",
+    "errorBody": "Something went wrong while sending the form. Try again or reach us on WhatsApp.",
+    "notConfigured": "The form is not connected to an email service yet. In the meantime, reach us on WhatsApp or by email.",
+    "errors": {
+      "nameRequired": "Please enter your name.",
+      "nameTooLong": "That name is too long.",
+      "emailRequired": "Please enter your email address.",
+      "emailInvalid": "That email does not look valid.",
+      "phoneInvalid": "The phone number should only contain digits, spaces or dashes.",
+      "projectTypeRequired": "Please select a project type.",
+      "messageRequired": "Tell us briefly what you need.",
+      "messageTooShort": "That message is too short.",
+      "messageTooLong": "That message is too long.",
+      "rateLimited": "You have sent several messages in a row. Please wait a few minutes."
+    },
+    "projectTypes": {
+      "architectural-design": "Architectural design",
+      "remodeling": "Remodeling",
+      "construction": "Construction",
+      "maintenance": "Maintenance",
+      "executive-project": "Construction documents",
+      "consulting": "Consulting",
+      "other": "Other"
+    }
+  },
+  "footer": {
+    "tagline": "Design and Planning",
+    "navHeading": "Navigation",
+    "contactHeading": "Contact",
+    "legalHeading": "Legal",
+    "privacy": "Privacy policy",
+    "rights": "All rights reserved.",
+    "credit": "Web design and development"
+  },
+  "privacy": {
+    "title": "Privacy policy",
+    "placeholderNotice": "Document pending. This text is a placeholder and must be replaced with the practice's actual privacy policy before the site goes live.",
+    "body": "AGM Diseño y Proyección collects the data you submit through the contact form for the sole purpose of responding to your enquiry. The final wording of this notice, including the data controller, purposes, transfers and how to exercise your rights, will be drafted by the practice."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "body": "The page you are looking for does not exist or has moved.",
+    "cta": "Back to home"
+  },
+  "error": {
+    "title": "Something went wrong",
+    "body": "An unexpected error occurred while loading this section.",
+    "retry": "Try again"
+  }
+}

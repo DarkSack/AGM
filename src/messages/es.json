@@ -1,0 +1,165 @@
+{
+  "nav": {
+    "skipToContent": "Saltar al contenido",
+    "home": "Inicio",
+    "about": "Sobre AGM",
+    "services": "Servicios",
+    "projects": "Proyectos",
+    "method": "Método",
+    "contact": "Contacto",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú",
+    "menu": "Menú",
+    "primaryLabel": "Navegación principal",
+    "mobileLabel": "Navegación móvil",
+    "footerLabel": "Navegación del pie de página"
+  },
+  "theme": {
+    "label": "Tema",
+    "toggle": "Cambiar tema",
+    "light": "Claro",
+    "dark": "Oscuro",
+    "system": "Sistema"
+  },
+  "language": {
+    "label": "Idioma",
+    "switchTo": "Cambiar a {language}",
+    "es": "Español",
+    "en": "English"
+  },
+  "hero": {
+    "scrollHint": "Desliza para descubrir"
+  },
+  "about": {
+    "eyebrow": "Sobre AGM",
+    "title": "Arquitectura que responde a cómo se vive el espacio",
+    "philosophyLabel": "Nuestra filosofía",
+    "pendingInfo": "Información biográfica pendiente de confirmar con el despacho."
+  },
+  "services": {
+    "eyebrow": "Servicios",
+    "title": "Qué hacemos",
+    "intro": "Cubrimos el ciclo completo de un proyecto: desde la idea y su documentación técnica hasta la ejecución y el mantenimiento posterior.",
+    "cta": "Solicitar cotización"
+  },
+  "projects": {
+    "eyebrow": "Proyectos",
+    "title": "Proyectos seleccionados",
+    "intro": "Una muestra del tipo de trabajo que desarrollamos y de los criterios con los que abordamos cada encargo.",
+    "conceptBadge": "Proyecto conceptual",
+    "conceptNotice": "Los proyectos que ves a continuación son propuestas conceptuales creadas como muestra del enfoque de trabajo del despacho. No corresponden a obra ejecutada por AGM.",
+    "viewDetail": "Ver proyecto",
+    "backToProjects": "Volver a proyectos",
+    "empty": "Todavía no hay proyectos publicados.",
+    "meta": {
+      "category": "Categoría",
+      "location": "Ubicación",
+      "year": "Año",
+      "client": "Cliente",
+      "area": "Superficie"
+    },
+    "gallery": "Galería",
+    "filters": {
+      "all": "Todos"
+    },
+    "categories": {
+      "residential": "Residencial",
+      "commercial": "Comercial",
+      "remodeling": "Remodelación",
+      "maintenance": "Mantenimiento",
+      "executive": "Proyecto ejecutivo",
+      "other": "Otro"
+    }
+  },
+  "method": {
+    "eyebrow": "Método",
+    "title": "Nuestro método",
+    "intro": "Seis etapas que ordenan el trabajo y hacen previsible el resultado. Ninguna se salta.",
+    "cta": "Conoce nuestro método"
+  },
+  "values": {
+    "eyebrow": "Filosofía",
+    "title": "Cómo trabajamos"
+  },
+  "contact": {
+    "eyebrow": "Contacto",
+    "title": "Transformemos tu espacio",
+    "intro": "Cuéntanos sobre tu proyecto y encontremos juntos la mejor solución.",
+    "phone": "Teléfono",
+    "email": "Correo",
+    "facebook": "Facebook",
+    "whatsapp": "Hablar por WhatsApp",
+    "location": "Ubicación",
+    "locationPending": "Ubicación pendiente de confirmar",
+    "directLabel": "Contacto directo",
+    "facebookPending": "Enlace de Facebook pendiente"
+  },
+  "form": {
+    "legend": "Formulario de cotización",
+    "name": "Nombre",
+    "namePlaceholder": "Tu nombre completo",
+    "email": "Correo electrónico",
+    "emailPlaceholder": "nombre@correo.com",
+    "phone": "Teléfono",
+    "phonePlaceholder": "10 dígitos",
+    "phoneOptional": "opcional",
+    "projectType": "Tipo de proyecto",
+    "projectTypePlaceholder": "Selecciona una opción",
+    "message": "Mensaje",
+    "messagePlaceholder": "Cuéntanos qué necesitas, dónde se ubica el inmueble y en qué plazos piensas.",
+    "submit": "Solicitar cotización",
+    "submitting": "Enviando…",
+    "required": "obligatorio",
+    "successTitle": "Mensaje enviado",
+    "successBody": "Gracias por escribirnos. Te responderemos al correo que nos dejaste.",
+    "sendAnother": "Enviar otro mensaje",
+    "errorTitle": "No se pudo enviar",
+    "errorBody": "Ocurrió un problema al enviar el formulario. Inténtalo de nuevo o escríbenos por WhatsApp.",
+    "notConfigured": "El formulario todavía no está conectado a un servicio de correo. Mientras tanto, escríbenos por WhatsApp o al correo del despacho.",
+    "errors": {
+      "nameRequired": "Escribe tu nombre.",
+      "nameTooLong": "El nombre es demasiado largo.",
+      "emailRequired": "Escribe tu correo electrónico.",
+      "emailInvalid": "El correo no parece válido.",
+      "phoneInvalid": "El teléfono solo debe contener números, espacios o guiones.",
+      "projectTypeRequired": "Selecciona un tipo de proyecto.",
+      "messageRequired": "Cuéntanos brevemente qué necesitas.",
+      "messageTooShort": "El mensaje es demasiado corto.",
+      "messageTooLong": "El mensaje es demasiado largo.",
+      "rateLimited": "Has enviado varios mensajes seguidos. Espera unos minutos."
+    },
+    "projectTypes": {
+      "architectural-design": "Diseño arquitectónico",
+      "remodeling": "Remodelación",
+      "construction": "Construcción",
+      "maintenance": "Mantenimiento",
+      "executive-project": "Proyecto ejecutivo",
+      "consulting": "Consultoría",
+      "other": "Otro"
+    }
+  },
+  "footer": {
+    "tagline": "Diseño y Proyección",
+    "navHeading": "Navegación",
+    "contactHeading": "Contacto",
+    "legalHeading": "Legal",
+    "privacy": "Aviso de privacidad",
+    "rights": "Todos los derechos reservados.",
+    "credit": "Diseño y desarrollo web"
+  },
+  "privacy": {
+    "title": "Aviso de privacidad",
+    "placeholderNotice": "Documento pendiente. Este texto es un marcador de posición: debe sustituirse por el aviso de privacidad real del despacho antes de publicar el sitio.",
+    "body": "AGM Diseño y Proyección recaba los datos que envías a través del formulario de contacto con la única finalidad de responder a tu solicitud. El contenido definitivo de este aviso, incluyendo responsable del tratamiento, finalidades, transferencias y medios para ejercer derechos ARCO, será redactado por el despacho."
+  },
+  "notFound": {
+    "title": "Página no encontrada",
+    "body": "La página que buscas no existe o cambió de dirección.",
+    "cta": "Volver al inicio"
+  },
+  "error": {
+    "title": "Algo salió mal",
+    "body": "Ocurrió un error inesperado al cargar esta sección.",
+    "retry": "Reintentar"
+  }
+}
