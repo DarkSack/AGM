@@ -31,9 +31,12 @@ exception when duplicate_object then null; end $$;
 -- ---------------------------------------------------------------------
 -- Utilidades
 -- ---------------------------------------------------------------------
+-- search_path fijo: si se resuelve con el del rol que dispara el trigger, un
+-- esquema anterior en la ruta podria colar su propio now().
 create or replace function public.touch_updated_at()
 returns trigger
 language plpgsql
+set search_path = pg_catalog, pg_temp
 as $$
 begin
   new.updated_at = now();

@@ -89,7 +89,9 @@ clave `service_role` en este proyecto**: no la necesita.
 ### 3. Dar de alta al primer administrador
 
 En **Authentication → Users → Add user**, crea el usuario con su correo y
-contraseña. Copia su UUID y ejecuta en el SQL Editor:
+contraseña, y marca **Auto Confirm User**: sin confirmar, el correo no puede
+iniciar sesión y el login devuelve un error genérico de credenciales que
+despista. Copia su UUID y ejecuta en el SQL Editor:
 
 ```sql
 insert into public.profiles (id, email, full_name, role)
