@@ -74,6 +74,16 @@ export function OrganizationJsonLd({
     telephone: contact.phoneHref.replace("tel:", ""),
     email: contact.email,
     address,
+    // Solo con la direccion verificada: un `geo` sin confirmar manda a la
+    // gente a la puerta equivocada, que es peor que no dar coordenadas.
+    geo:
+      !contact.locationPending && siteConfig.location.geo
+        ? {
+            "@type": "GeoCoordinates",
+            latitude: siteConfig.location.geo.lat,
+            longitude: siteConfig.location.geo.lng,
+          }
+        : undefined,
     // `areaServed` con marcador no aporta nada: se omite hasta tener la ciudad.
     areaServed: contact.locationPending ? undefined : contact.cityLine,
     openingHours: contact.openingHours ?? undefined,

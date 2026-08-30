@@ -339,7 +339,7 @@ function ContactSection({ values, setValues }: SectionProps) {
           label="Ciudad"
           value={values.contact.city ?? ""}
           onChange={(next) => setContact({ city: next || null })}
-          hint="Al rellenarla, el sitio deja de mostrar «ubicación pendiente» y la publica en los datos estructurados."
+          hint="Sustituye a la dirección de la configuración. Si la dejas vacía se usa esa; en ambos casos se publica en los datos estructurados."
         />
         <TextField
           label="Estado"

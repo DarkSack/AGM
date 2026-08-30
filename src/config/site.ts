@@ -90,11 +90,14 @@ export const siteConfig = {
     /** Zona de servicio declarada. Se usa en Schema.org `areaServed`. */
     areaServed: "Zapopan, Jalisco",
     /**
-     * Coordenadas: siguen sin confirmar. No se deducen de la direccion —
-     * un `geo` aproximado en datos estructurados manda a la gente al sitio
-     * equivocado. Rellenar solo con el punto exacto que de el cliente.
+     * Punto exacto, tomado del enlace de Google Maps que dio el cliente
+     * (los pares `!3d` / `!4d` de la URL, que son la chincheta; el `@...`
+     * es solo el encuadre de la camara y cae unos metros al lado).
      */
-    geo: null as { lat: number; lng: number } | null,
+    geo: { lat: 20.7287526, lng: -103.4210808 } as {
+      lat: number;
+      lng: number;
+    } | null,
     /** Horario de atencion. null = no se declara en Schema.org. */
     openingHours: null as string[] | null,
   },
