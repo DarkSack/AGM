@@ -8,6 +8,7 @@ import { slugify } from "@/lib/slug";
 import { SERVICE_ICON_KEYS, ServiceIcon } from "@/components/ui/ServiceIcon";
 import type { Localized, Service } from "@/types/content";
 import { CheckboxField, LocalizedField, SelectField, TextField } from "./fields";
+import { useDragReorder } from "./useDragReorder";
 
 const emptyLocalized = (): Localized =>
   Object.fromEntries(LOCALES.map((locale) => [locale, ""])) as Localized;
@@ -72,22 +73,27 @@ export function ServicesEditor({ services }: { services: Service[] }) {
     });
   }
 
-  function move(index: number, delta: number) {
-    const target = index + delta;
-    if (target < 0 || target >= items.length) return;
+  const { itemRef, dragState } = useDragReorder(items.length, (f, t) =>
+    reorder(f, t),
+  );
 
+  function reorder(from: number, to: number) {
     const next = [...items];
-    const [item] = next.splice(index, 1);
+    const [item] = next.splice(from, 1);
     if (!item) return;
-    next.splice(target, 0, item);
+    next.splice(to, 0, item);
 
     const reordered = next.map((entry, position) => ({ ...entry, position }));
     setItems(reordered);
 
-    // Solo se reescriben las dos fichas que han cambiado de sitio.
+    // Se reescribe todo el tramo entre origen y destino: arrastrando, un solo
+    // movimiento corre de sitio a todas las fichas intermedias, no solo a dos.
+    const desde = Math.min(from, to);
+    const hasta = Math.max(from, to);
+
     setFeedback(null);
     startTransition(async () => {
-      for (const position of [index, target]) {
+      for (let position = desde; position <= hasta; position += 1) {
         const entry = reordered[position];
         if (!entry?.id) continue;
         await saveService({
@@ -102,6 +108,12 @@ export function ServicesEditor({ services }: { services: Service[] }) {
       }
       router.refresh();
     });
+  }
+
+  function move(index: number, delta: number) {
+    const target = index + delta;
+    if (target < 0 || target >= items.length) return;
+    reorder(index, target);
   }
 
   function remove(service: Service, index: number) {
@@ -165,9 +177,19 @@ export function ServicesEditor({ services }: { services: Service[] }) {
           return (
             <li
               key={key}
-              className="rounded-[4px] border border-line bg-bg"
+              ref={itemRef(index)}
+              data-arrastrando={dragState(index).dragging || undefined}
+              data-borde={dragState(index).edge ?? undefined}
+              className="reordenable rounded-[4px] border border-line bg-bg"
             >
               <div className="flex flex-wrap items-center gap-3 p-4">
+                <span
+                  aria-hidden="true"
+                  title="Arrastra para reordenar"
+                  className="cursor-grab select-none text-fg-subtle active:cursor-grabbing"
+                >
+                  ⠿
+                </span>
                 <ServiceIcon
                   name={service.icon}
                   className="size-6 shrink-0 text-fg-muted"

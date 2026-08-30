@@ -315,3 +315,42 @@
     transform: none !important;
   }
 }
+
+/* ---------------------------------------------------------------------
+   Listas reordenables del panel
+   
+   El elemento que se arrastra baja de opacidad, y una linea marca por
+   donde entraria al soltar. Todo con `data-*` que pone el hook, sin
+   estilos en linea.
+   --------------------------------------------------------------------- */
+.reordenable {
+  position: relative;
+}
+
+.reordenable[data-arrastrando] {
+  opacity: 0.4;
+}
+
+.reordenable[data-borde]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--agm-accent, currentColor);
+  pointer-events: none;
+}
+
+.reordenable[data-borde="top"]::after {
+  top: -1px;
+}
+
+.reordenable[data-borde="bottom"]::after {
+  bottom: -1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reordenable[data-arrastrando] {
+    opacity: 0.6;
+  }
+}

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { LOCALES } from "@/config/site";
 import { saveBlocks } from "@/lib/admin/actions";
+import { useDragReorder } from "./useDragReorder";
 import { BLOCK_TYPES, type BlockType, type ContentBlock, type Localized, type Project } from "@/types/content";
 import { ImageUploader } from "./ImageUploader";
 import { LocalizedField, SelectField, TextField } from "./fields";
@@ -107,6 +108,8 @@ export function BlocksEditor({
     { kind: "ok" | "error"; text: string } | null
   >(null);
 
+  const { itemRef, dragState } = useDragReorder(blocks.length, reorder);
+
   const usedSingletons = new Set(
     blocks.filter((b) => SINGLETON_TYPES.includes(b.type)).map((b) => b.type),
   );
@@ -115,14 +118,18 @@ export function BlocksEditor({
     (type) => !SINGLETON_TYPES.includes(type) || !usedSingletons.has(type),
   );
 
+  function reorder(from: number, to: number) {
+    const next = [...blocks];
+    const [item] = next.splice(from, 1);
+    if (!item) return;
+    next.splice(to, 0, item);
+    setBlocks(next.map((block, position) => ({ ...block, position })));
+  }
+
   function move(index: number, delta: number) {
     const target = index + delta;
     if (target < 0 || target >= blocks.length) return;
-    const next = [...blocks];
-    const [item] = next.splice(index, 1);
-    if (!item) return;
-    next.splice(target, 0, item);
-    setBlocks(next.map((block, position) => ({ ...block, position })));
+    reorder(index, target);
   }
 
   function save() {
@@ -187,8 +194,21 @@ export function BlocksEditor({
           const editable = !SINGLETON_TYPES.includes(block.type) && block.type !== "divider";
 
           return (
-            <li key={block.id} className="rounded-[4px] border border-line bg-bg">
+            <li
+              key={block.id}
+              ref={itemRef(index)}
+              data-arrastrando={dragState(index).dragging || undefined}
+              data-borde={dragState(index).edge ?? undefined}
+              className="reordenable rounded-[4px] border border-line bg-bg"
+            >
               <div className="flex flex-wrap items-center gap-3 p-4">
+                <span
+                  aria-hidden="true"
+                  title="Arrastra para reordenar"
+                  className="cursor-grab select-none text-fg-subtle active:cursor-grabbing"
+                >
+                  ⠿
+                </span>
                 <span className="w-6 text-xs tabular-nums text-fg-subtle">
                   {String(index + 1).padStart(2, "0")}
                 </span>

@@ -11,6 +11,7 @@ import {
 } from "@/lib/supabase/config";
 import { slugify } from "@/lib/slug";
 import type { ProjectImage } from "@/types/content";
+import { useDragReorder } from "./useDragReorder";
 
 interface ImageUploaderProps {
   images: ProjectImage[];
@@ -126,14 +127,22 @@ export function ImageUploader({
     [folder, images, onChange],
   );
 
+  const { itemRef, dragState } = useDragReorder(images.length, (f, t) =>
+    reorder(f, t),
+  );
+
+  const reorder = (from: number, to: number) => {
+    const next = [...images];
+    const [item] = next.splice(from, 1);
+    if (!item) return;
+    next.splice(to, 0, item);
+    onChange(next.map((image, position) => ({ ...image, position })));
+  };
+
   const move = (index: number, delta: number) => {
     const target = index + delta;
     if (target < 0 || target >= images.length) return;
-    const next = [...images];
-    const [item] = next.splice(index, 1);
-    if (!item) return;
-    next.splice(target, 0, item);
-    onChange(next.map((image, position) => ({ ...image, position })));
+    reorder(index, target);
   };
 
   const remove = async (index: number) => {
@@ -211,7 +220,10 @@ export function ImageUploader({
           {images.map((image, index) => (
             <li
               key={image.id}
-              className="flex flex-col gap-3 rounded-[3px] border border-line bg-surface p-3 sm:flex-row"
+              ref={itemRef(index)}
+              data-arrastrando={dragState(index).dragging || undefined}
+              data-borde={dragState(index).edge ?? undefined}
+              className="reordenable flex cursor-grab flex-col gap-3 rounded-[3px] border border-line bg-surface p-3 active:cursor-grabbing sm:flex-row"
             >
               <div className="relative h-28 w-full shrink-0 overflow-hidden bg-bg-alt sm:w-40">
                 {/* eslint-disable-next-line @next/next/no-img-element -- vista previa local del panel, no forma parte del sitio publico */}
