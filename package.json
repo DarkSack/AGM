@@ -4,7 +4,8 @@
   "private": true,
   "description": "Sitio web y CMS de AGM Diseno y Proyeccion",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
+    "dev:webpack": "next dev",
     "build": "next build",
     "start": "next start",
     "clean": "node -e \"require('node:fs').rmSync('.next',{recursive:true,force:true})\"",
