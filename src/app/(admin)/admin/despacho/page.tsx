@@ -6,8 +6,14 @@ import { getAdminSettings } from "@/lib/admin/queries";
 export const dynamic = "force-dynamic";
 
 export default async function AdminOfficePage() {
-  const { profile } = await requireStaff();
-  const settings = await getAdminSettings();
+  // La consulta arranca a la vez que la comprobacion de sesion. Son dos
+  // viajes de red independientes y encadenarlos duplicaba la espera al
+  // cambiar de seccion. La autorizacion se sigue resolviendo antes de
+  // renderizar nada, y RLS protege la consulta pase lo que pase.
+  const [{ profile }, settings] = await Promise.all([
+    requireStaff(),
+    getAdminSettings(),
+  ]);
 
   return (
     <AdminShell

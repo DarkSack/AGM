@@ -6,8 +6,12 @@ import { listAllBlocks, listAllProjects } from "@/lib/admin/queries";
 export const dynamic = "force-dynamic";
 
 export default async function AdminBlocksPage() {
-  const { profile } = await requireStaff();
-  const [blocks, projects] = await Promise.all([
+  // La consulta arranca a la vez que la comprobacion de sesion. Son dos
+  // viajes de red independientes y encadenarlos duplicaba la espera al
+  // cambiar de seccion. La autorizacion se sigue resolviendo antes de
+  // renderizar nada, y RLS protege la consulta pase lo que pase.
+  const [{ profile }, blocks, projects] = await Promise.all([
+    requireStaff(),
     listAllBlocks(),
     listAllProjects(),
   ]);

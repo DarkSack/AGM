@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -29,8 +30,12 @@ export interface StaffSession {
  * Tener sesion no basta: hace falta fila en `profiles`. Es lo que separa a un
  * usuario cualquiera de Supabase Auth del personal del despacho, y es la misma
  * condicion que exigen las politicas RLS.
+ *
+ * Va envuelta en `cache()` de React: dentro de una misma peticion se puede
+ * llamar desde la pagina y desde cualquier componente sin repetir las dos
+ * consultas de red que hace (verificar el token y leer el perfil).
  */
-export async function requireStaff(): Promise<StaffSession> {
+export const requireStaff = cache(async (): Promise<StaffSession> => {
   const supabase = await createSupabaseServerClient();
 
   // Sin backend configurado no puede haber sesion. Se manda a la pantalla de
@@ -80,7 +85,7 @@ export async function requireStaff(): Promise<StaffSession> {
       role: asEnum<AdminRole>(data.role, ["admin", "editor"], "editor"),
     },
   };
-}
+});
 
 /**
  * Acciones reservadas al rol `admin` (configuracion global y usuarios).
