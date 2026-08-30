@@ -23,14 +23,22 @@ export function LoginForm() {
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<
     { kind: "error" | "info"; text: string } | null
-  >(() =>
-    searchParams.get("error") === "sin-perfil"
-      ? {
+  >(() => {
+    switch (searchParams.get("error")) {
+      case "sin-perfil":
+        return {
           kind: "error",
           text: "Tu cuenta existe pero todavía no tiene acceso al panel. Pide a un administrador que te dé de alta.",
-        }
-      : null,
-  );
+        };
+      case "sin-conexion":
+        return {
+          kind: "error",
+          text: "No se pudo conectar con el servidor para comprobar tu acceso. Vuelve a intentarlo en un momento.",
+        };
+      default:
+        return null;
+    }
+  });
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

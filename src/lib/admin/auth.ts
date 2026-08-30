@@ -41,7 +41,12 @@ export async function requireStaff(): Promise<StaffSession> {
   // cookie, que el cliente controla.
   const {
     data: { user },
+    error: authError,
   } = await supabase.auth.getUser();
+
+  if (authError && authError.name !== "AuthSessionMissingError") {
+    console.error("[auth] no se pudo verificar la sesion:", authError.message);
+  }
 
   if (!user) redirect("/admin/login");
 
@@ -51,7 +56,16 @@ export async function requireStaff(): Promise<StaffSession> {
     .eq("id", user.id)
     .maybeSingle();
 
-  if (error || !data || !isRecord(data)) {
+  // No es lo mismo no tener perfil que no poder consultarlo. Antes ambos casos
+  // acababan en "sin-perfil", que ante una caida de la base de datos le dice al
+  // usuario justo lo contrario de lo que pasa y manda a buscar el problema al
+  // sitio equivocado.
+  if (error) {
+    console.error("[auth] no se pudo leer el perfil:", error.message);
+    redirect("/admin/login?error=sin-conexion");
+  }
+
+  if (!data || !isRecord(data)) {
     // Usuario autenticado pero sin perfil: no es personal del despacho.
     redirect("/admin/login?error=sin-perfil");
   }

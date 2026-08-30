@@ -48,7 +48,16 @@ async function handleAdmin(request: NextRequest): Promise<NextResponse> {
   // getSession() aqui: lee la cookie sin verificar la firma.
   const {
     data: { user },
+    error,
   } = await supabase.auth.getUser();
+
+  // Si no se pudo verificar el token seguimos expulsando (fallar cerrado es lo
+  // correcto), pero se deja constancia: sin esta linea, no poder hablar con
+  // Supabase es indistinguible de no haber iniciado sesion, y el sintoma es un
+  // login que "no hace nada" sin una sola pista en los registros.
+  if (error && error.name !== "AuthSessionMissingError") {
+    console.error("[auth] no se pudo verificar la sesion:", error.message);
+  }
 
   const isLoginPage = pathname === LOGIN_PATH;
 
