@@ -40,7 +40,19 @@ export default async function PrivacyPage({
   if (!isLocale(locale)) notFound();
 
   setRequestLocale(locale);
-  const t = await getTranslations("privacy");
+
+  // DIAGNOSTICO TEMPORAL: el deploy falla aqui con el mensaje enmascarado.
+  let t;
+  try {
+    t = await getTranslations("privacy");
+  } catch (error) {
+    const e = error as Error & { digest?: string };
+    console.error(
+      `[diag] getTranslations locale=${locale} digest=${e?.digest}
+${e?.stack ?? String(error)}`,
+    );
+    throw error;
+  }
 
   return (
     <div className="pt-32 pb-24 md:pt-40">

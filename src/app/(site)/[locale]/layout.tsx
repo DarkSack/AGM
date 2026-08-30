@@ -70,6 +70,18 @@ export default async function LocaleLayout({
   // forma estatica: sin esto next-intl las marca como dinamicas.
   setRequestLocale(locale);
 
+  // DIAGNOSTICO TEMPORAL
+  try {
+    await getMessages();
+  } catch (error) {
+    const e = error as Error & { digest?: string };
+    console.error(
+      `[diag] getMessages locale=${locale} digest=${e?.digest}
+${e?.stack ?? String(error)}`,
+    );
+    throw error;
+  }
+
   const [settings, messages, t] = await Promise.all([
     getSettings(),
     // En next-intl 3 hay que entregar los mensajes al proveedor de forma
