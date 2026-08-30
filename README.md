@@ -178,8 +178,24 @@ desmarcada: los conceptuales son la excepción.
 
 ## Analítica
 
-GA4 se carga solo si `NEXT_PUBLIC_GA_MEASUREMENT_ID` tiene un valor real
-(el placeholder `G-XXXXXXXXXX` no cuenta). Eventos:
+Hay dos caminos y **se usa uno**:
+
+| Variable | Identificador | Qué hace |
+| --- | --- | --- |
+| `NEXT_PUBLIC_GTM_ID` | `GTM-XXXXXXX` | Carga Google Tag Manager. Las etiquetas se añaden desde el contenedor, sin tocar código. |
+| `NEXT_PUBLIC_GA_MEASUREMENT_ID` | `G-XXXXXXXXXX` | Carga GA4 directo. Más ligero. |
+
+Si se configuran las dos **gana GTM**: con una etiqueta de GA4 dentro del
+contenedor, cada visita se contaría dos veces. Los dos identificadores se
+confunden con facilidad y el error no avisa, simplemente no se registra nada;
+el de GA4 sale de **GA4 → Administrar → Flujos de datos**.
+
+**Aviso de privacidad técnica:** con GA4 directo, `anonymize_ip` y la
+desactivación de las señales de Google van fijadas en el código. Con GTM esos
+ajustes viven dentro del contenedor y el código no puede garantizarlos: hay
+que configurarlos ahí.
+
+Eventos:
 
 `whatsapp_click`, `phone_click`, `email_click`, `facebook_click`,
 `quote_cta_click`, `projects_cta_click`, `project_view`, `contact_form_submit`,
@@ -223,7 +239,8 @@ Recomendado en **Vercel**, que es donde Next se despliega sin configuración.
      Es lo que alimenta canonical, `hreflang`, sitemap y Open Graph: **si queda
      en `localhost`, el SEO no funciona**.
    - `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-   - `NEXT_PUBLIC_GA_MEASUREMENT_ID` cuando exista la propiedad de GA4.
+   - `NEXT_PUBLIC_GTM_ID` (contenedor de Tag Manager) **o**
+     `NEXT_PUBLIC_GA_MEASUREMENT_ID` (GA4 directo), no las dos.
    - `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` cuando se verifique en Search
      Console.
 3. Deploy. HTTPS y CDN vienen configurados.

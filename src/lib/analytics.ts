@@ -48,7 +48,25 @@ declare global {
   }
 }
 
+/**
+ * Envia un evento por el camino que este activo.
+ *
+ * Con GA4 directo existe `window.gtag`. Con Tag Manager no existe: ahi lo que
+ * hay es `window.dataLayer`, y los eventos se empujan con la clave `event`,
+ * que es sobre la que se configuran los activadores del contenedor.
+ *
+ * Si no hay ninguno de los dos, no hace nada. Nunca lanza: un fallo de
+ * medicion no puede tumbar una interaccion del usuario.
+ */
 export function track(event: AnalyticsEvent, params: AnalyticsParams = {}): void {
-  if (typeof window === "undefined" || typeof window.gtag !== "function") return;
-  window.gtag("event", event, params);
+  if (typeof window === "undefined") return;
+
+  if (typeof window.gtag === "function") {
+    window.gtag("event", event, params);
+    return;
+  }
+
+  if (Array.isArray(window.dataLayer)) {
+    window.dataLayer.push({ event, ...params });
+  }
 }

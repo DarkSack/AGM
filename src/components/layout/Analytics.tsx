@@ -1,18 +1,46 @@
 import Script from "next/script";
-import { gaMeasurementId } from "@/config/site";
+import { gaMeasurementId, gtmContainerId } from "@/config/site";
 
 /**
- * GA4.
+ * Medicion de audiencia. Dos caminos, y solo se usa uno.
  *
- * Se carga con `afterInteractive` para que no compita con el LCP, y no se
- * inyecta nada si `NEXT_PUBLIC_GA_MEASUREMENT_ID` esta vacio o conserva el
- * placeholder `G-XXXXXXXXXX`.
+ * 1. Google Tag Manager (`NEXT_PUBLIC_GTM_ID`, del tipo `GTM-XXXXXXX`). El
+ *    contenedor decide que etiquetas se cargan sin tocar el codigo, que es lo
+ *    comodo para quien reciba el sitio.
+ * 2. GA4 directo (`NEXT_PUBLIC_GA_MEASUREMENT_ID`, del tipo `G-XXXXXXXXXX`).
+ *    Mas ligero y con la configuracion de privacidad fijada aqui.
  *
- * `anonymize_ip` y la desactivacion de las senales de Google reducen el dato
- * personal que sale del sitio. Las vistas de pagina las gestiona el propio
- * gtag; los eventos concretos se envian desde `lib/analytics`.
+ * GTM tiene prioridad: si el contenedor ya lleva dentro una etiqueta de GA4 y
+ * ademas se configurara el identificador de GA4, cada visita se contaria dos
+ * veces.
+ *
+ * OJO con la privacidad: en el camino 1 los ajustes de `anonymize_ip` y de las
+ * senales de Google se configuran DENTRO de Tag Manager, no aqui. Este
+ * componente no puede garantizarlos. En el camino 2 si van fijados abajo.
+ *
+ * Ambos se cargan con `afterInteractive` para no competir con el LCP. Las
+ * vistas de pagina se registran solas; los eventos concretos salen de
+ * `lib/analytics`.
  */
 export function Analytics() {
+  if (gtmContainerId) {
+    return (
+      <Script id="gtm-init" strategy="afterInteractive">
+        {`
+          window.dataLayer = window.dataLayer || [];
+          window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+          (function (d, s, i) {
+            var j = d.createElement(s);
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i;
+            var f = d.getElementsByTagName(s)[0];
+            f.parentNode.insertBefore(j, f);
+          })(document, 'script', ${JSON.stringify(gtmContainerId)});
+        `}
+      </Script>
+    );
+  }
+
   if (!gaMeasurementId) return null;
 
   return (
@@ -35,5 +63,28 @@ export function Analytics() {
         `}
       </Script>
     </>
+  );
+}
+
+/**
+ * El `<noscript>` de Tag Manager, que Google pide justo despues de `<body>`.
+ *
+ * Va aparte porque su sitio en el arbol no es el mismo que el del script: este
+ * tiene que ser el primer hijo de `<body>`, y aquel se carga al final. Sin JS
+ * apenas registra nada, pero es lo que documenta Google y no cuesta nada.
+ */
+export function AnalyticsNoScript() {
+  if (!gtmContainerId) return null;
+
+  return (
+    <noscript>
+      <iframe
+        src={`https://www.googletagmanager.com/ns.html?id=${gtmContainerId}`}
+        height="0"
+        width="0"
+        style={{ display: "none", visibility: "hidden" }}
+        title="Google Tag Manager"
+      />
+    </noscript>
   );
 }

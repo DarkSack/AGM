@@ -6,7 +6,7 @@ import { googleSiteVerification, isLocale, siteUrl } from "@/config/site";
 import { displayFont, sansFont } from "@/fonts";
 import { getSettings } from "@/data/queries";
 import { routing } from "@/i18n/routing";
-import { Analytics } from "@/components/layout/Analytics";
+import { Analytics, AnalyticsNoScript } from "@/components/layout/Analytics";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { ThemeKeeper } from "@/components/layout/ThemeKeeper";
@@ -91,6 +91,9 @@ export default async function LocaleLayout({
       <body
         className={`${displayFont.variable} ${sansFont.variable} min-h-svh antialiased`}
       >
+        {/* Google lo pide como primer elemento del <body>. */}
+        <AnalyticsNoScript />
+
         <NextIntlClientProvider messages={messages}>
           <a
             href="#contenido"

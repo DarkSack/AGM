@@ -146,11 +146,27 @@ export function normalizarSiteUrl(raw: string | undefined): string {
 
 export const siteUrl = normalizarSiteUrl(process.env.NEXT_PUBLIC_SITE_URL);
 
-/** GA4. Sin valor (o con el placeholder) el script no se inyecta. */
+/** GA4 directo (gtag.js). Sin valor (o con el placeholder) no se inyecta. */
 export const gaMeasurementId = (() => {
   const id = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim();
   if (!id || id === "G-XXXXXXXXXX") return null;
-  return id;
+  return /^G-[A-Z0-9]+$/i.test(id) ? id : null;
+})();
+
+/**
+ * Google Tag Manager. Es una alternativa a lo anterior, no un complemento:
+ * si el contenedor ya lleva dentro una etiqueta de GA4 y ademas se configura
+ * `NEXT_PUBLIC_GA_MEASUREMENT_ID`, cada visita se cuenta dos veces. Por eso
+ * `Analytics` da prioridad a GTM y omite gtag cuando ambos estan puestos.
+ *
+ * El identificador es del tipo `GTM-XXXXXXX`, distinto del `G-XXXXXXXXXX` de
+ * GA4: confundirlos es el error habitual y no da ningun aviso, simplemente no
+ * se registra nada.
+ */
+export const gtmContainerId = (() => {
+  const id = process.env.NEXT_PUBLIC_GTM_ID?.trim();
+  if (!id || id === "GTM-XXXXXXX") return null;
+  return /^GTM-[A-Z0-9]+$/i.test(id) ? id : null;
 })();
 
 /** Codigo de verificacion de Google Search Console. */
