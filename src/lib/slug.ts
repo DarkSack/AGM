@@ -14,8 +14,13 @@ export function slugify(input: string): string {
     .replace(/[̀-ͯ]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 96);
+    // El recorte va ANTES de limpiar los guiones de los extremos. Al reves
+    // —que es como estaba— un titulo largo cuyo corte cayera sobre un guion
+    // producia un slug terminado en guion, que no cumple SLUG_PATTERN ni el
+    // CHECK de la tabla: el error no salia al escribir el titulo sino al
+    // guardar, como un fallo de Postgres sin explicacion.
+    .slice(0, 96)
+    .replace(/^-+|-+$/g, "");
 }
 
 export const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;

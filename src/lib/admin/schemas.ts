@@ -95,12 +95,21 @@ const ctaSchema = z.object({
   /**
    * Solo anclas internas o rutas del propio sitio. Impide que alguien con
    * acceso al panel deje un `javascript:` en el destino de un boton.
+   *
+   * El segundo caracter importa tanto como el primero: `//sitio-ajeno.example`
+   * empieza por `/` pero es una URL relativa al protocolo, y el navegador la
+   * resuelve como enlace externo. Con solo `/^[#/]/` —que es como estaba—
+   * pasaba el filtro. Se rechaza tambien `/\`, que algunos navegadores
+   * normalizan igual.
    */
   href: z
     .string()
     .trim()
     .max(300)
-    .regex(/^[#/]/, "El destino debe empezar por # o por /"),
+    .regex(
+      /^(?:#|\/(?![/\\]))/,
+      "El destino debe ser un ancla (#) o una ruta interna (/), no una URL externa.",
+    ),
 });
 
 export const settingsSchema = z.object({
