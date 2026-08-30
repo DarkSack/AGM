@@ -9,8 +9,16 @@ export interface ResolvedContact {
   emailHref: string;
   facebookUrl: string | null;
   instagramUrl: string | null;
+  /** Linea completa para mostrar, con C.P. incluido. */
   addressLine: string | null;
+  /**
+   * Calle y colonia, sin C.P. Es lo que va en `streetAddress` de Schema.org:
+   * el codigo postal tiene su propia propiedad y repetirlo en ambas confunde
+   * a los validadores.
+   */
+  streetAddress: string | null;
   cityLine: string | null;
+  postalCode: string | null;
   /** True cuando la ubicacion sigue siendo un marcador sin confirmar. */
   locationPending: boolean;
   openingHours: string[] | null;
@@ -40,6 +48,20 @@ export function resolveContact(settings: SiteSettings): ResolvedContact {
 
   const email = overrides.email?.trim() || siteConfig.contact.email;
 
+  // Calle, colonia y C.P. de la configuracion, ya montados en una linea.
+  // Solo se usan si la direccion esta verificada: un marcador sin sustituir
+  // no puede acabar presentandose como una direccion real.
+  const configStreet = siteConfig.location.verified
+    ? [siteConfig.location.street, siteConfig.location.neighborhood]
+        .filter(Boolean)
+        .join(", ")
+    : null;
+
+  const configAddressLine =
+    configStreet && siteConfig.location.postalCode
+      ? `${configStreet}, C.P. ${siteConfig.location.postalCode}`
+      : configStreet;
+
   const city = overrides.city?.trim() || siteConfig.location.city;
   const state = overrides.state?.trim() || siteConfig.location.state;
   const cityLine = [city, state].filter(Boolean).join(", ") || null;
@@ -58,8 +80,12 @@ export function resolveContact(settings: SiteSettings): ResolvedContact {
     emailHref: `mailto:${email}`,
     facebookUrl: overrides.facebookUrl ?? siteConfig.social.facebook.url,
     instagramUrl: overrides.instagramUrl ?? siteConfig.social.instagram.url,
-    addressLine: overrides.addressLine?.trim() || null,
+    addressLine: overrides.addressLine?.trim() || configAddressLine,
+    streetAddress: overrides.addressLine?.trim() || configStreet,
     cityLine,
+    postalCode: siteConfig.location.verified
+      ? siteConfig.location.postalCode
+      : null,
     locationPending,
     openingHours: overrides.openingHours,
   };

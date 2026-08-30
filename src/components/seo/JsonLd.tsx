@@ -57,9 +57,10 @@ export function OrganizationJsonLd({
     !contact.locationPending && contact.cityLine
       ? compact({
           "@type": "PostalAddress",
-          streetAddress: contact.addressLine,
+          streetAddress: contact.streetAddress,
           addressLocality: settings.contact.city ?? siteConfig.location.city,
           addressRegion: settings.contact.state ?? siteConfig.location.state,
+          postalCode: contact.postalCode,
           addressCountry: siteConfig.location.countryCode,
         })
       : undefined;

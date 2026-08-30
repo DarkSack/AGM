@@ -62,14 +62,11 @@ export const siteConfig = {
   },
 
   social: {
-    /**
-     * VERIFICAR: la papeleria indica el nombre de la pagina pero no la URL.
-     * Sustituir por el enlace real antes de publicar; si queda en null el
-     * enlace no se renderiza y no se incluye en Schema.org.
-     */
     facebook: {
       handle: "AGM Diseño y Proyección",
-      url: null as string | null,
+      url: "https://www.facebook.com/profile.php?id=61579444957462" as
+        | string
+        | null,
     },
     instagram: {
       handle: null as string | null,
@@ -78,25 +75,25 @@ export const siteConfig = {
   },
 
   /**
-   * VERIFICAR con el cliente antes de publicar.
-   *
-   * La direccion aparece en la papeleria pero no es legible con certeza en la
-   * imagen de referencia. Mientras `verified` sea false, la direccion no se
-   * emite en el JSON-LD (una direccion incorrecta en datos estructurados
-   * perjudica el SEO local en lugar de ayudarlo) y la UI muestra el marcador.
+   * Direccion confirmada por el cliente. Con `verified` en true se emite en
+   * el JSON-LD y la UI deja de mostrar el marcador.
    */
   location: {
-    verified: false,
-    street: "[CALLE Y NUMERO]",
-    neighborhood: "[COLONIA]",
-    postalCode: "[C.P.]",
-    city: "[CIUDAD]",
-    state: "[ESTADO]",
+    verified: true,
+    street: "Avenida Acueducto 829-B",
+    neighborhood: "Col. Santa Margarita",
+    postalCode: "45140",
+    city: "Zapopan",
+    state: "Jalisco",
     country: "México",
     countryCode: "MX",
     /** Zona de servicio declarada. Se usa en Schema.org `areaServed`. */
-    areaServed: "[CIUDAD], [ESTADO]",
-    /** Sin coordenadas hasta confirmar la direccion. */
+    areaServed: "Zapopan, Jalisco",
+    /**
+     * Coordenadas: siguen sin confirmar. No se deducen de la direccion —
+     * un `geo` aproximado en datos estructurados manda a la gente al sitio
+     * equivocado. Rellenar solo con el punto exacto que de el cliente.
+     */
     geo: null as { lat: number; lng: number } | null,
     /** Horario de atencion. null = no se declara en Schema.org. */
     openingHours: null as string[] | null,
