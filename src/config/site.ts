@@ -112,10 +112,39 @@ export const siteConfig = {
   } as { label: string; name: string; url: string | null } | null,
 } as const;
 
-/** URL canonica del sitio. Se configura al contratar el dominio real. */
-export const siteUrl = (
-  process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
-).replace(/\/$/, "");
+const SITE_URL_RESPALDO = "http://localhost:3000";
+
+/**
+ * URL canonica del sitio.
+ *
+ * Se normaliza en vez de usarse tal cual porque el valor lo escribe una
+ * persona en el panel de la plataforma de despliegue, y ahi caben faltas que
+ * `new URL()` no perdona: sin protocolo ("midominio.com"), con barra final,
+ * con una ruta pegada o con espacios. Cualquiera de esas hacia estallar el
+ * `metadataBase` del layout, y como eso corre en `generateMetadata` el build
+ * entero se caia con un error enmascarado que solo decia un `digest`.
+ *
+ * Ante un valor imposible se avisa y se usa el respaldo: es preferible un
+ * canonical incorrecto —visible y corregible— a un despliegue que no sale.
+ */
+export function normalizarSiteUrl(raw: string | undefined): string {
+  const limpio = raw?.trim();
+  if (!limpio) return SITE_URL_RESPALDO;
+
+  const conProtocolo = /^https?:\/\//i.test(limpio) ? limpio : `https://${limpio}`;
+
+  try {
+    return new URL(conProtocolo).origin;
+  } catch {
+    console.warn(
+      `[config] NEXT_PUBLIC_SITE_URL no es una URL valida (${JSON.stringify(limpio)}); ` +
+        `se usa ${SITE_URL_RESPALDO}. El canonical, el hreflang y el sitemap saldran mal.`,
+    );
+    return SITE_URL_RESPALDO;
+  }
+}
+
+export const siteUrl = normalizarSiteUrl(process.env.NEXT_PUBLIC_SITE_URL);
 
 /** GA4. Sin valor (o con el placeholder) el script no se inyecta. */
 export const gaMeasurementId = (() => {
