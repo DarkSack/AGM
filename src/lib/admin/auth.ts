@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { redirect } from "next/navigation";
-import type { SupabaseClient, User } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { asEnum, asNullableString, asString, isRecord } from "@/lib/json";
 
@@ -14,7 +14,8 @@ export interface StaffProfile {
 }
 
 export interface StaffSession {
-  user: User;
+  /** `sub` del token ya verificado. Es lo unico que se usaba de `user`. */
+  userId: string;
   profile: StaffProfile;
   supabase: SupabaseClient;
 }
@@ -44,21 +45,25 @@ export const requireStaff = cache(async (): Promise<StaffSession> => {
 
   // getUser() valida el token contra Supabase. getSession() solo leeria la
   // cookie, que el cliente controla.
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
+  // Verificacion local de la firma (ES256 via WebCrypto, con el JWKS del
+  // proyecto cacheado). Sustituye a getUser(), que preguntaba al servidor de
+  // Supabase en cada carga de cada seccion del panel. Comprueba lo mismo: que
+  // el token lo emitio este proyecto y no ha caducado.
+  const { data: claimsData, error: authError } = await supabase.auth.getClaims();
 
   if (authError && authError.name !== "AuthSessionMissingError") {
     console.error("[auth] no se pudo verificar la sesion:", authError.message);
   }
 
-  if (!user) redirect("/admin/login");
+  const claims = claimsData?.claims;
+  if (!claims?.sub) redirect("/admin/login");
+  const userId = claims.sub;
+  const claimEmail = typeof claims.email === "string" ? claims.email : null;
 
   const { data, error } = await supabase
     .from("profiles")
     .select("id, email, full_name, role")
-    .eq("id", user.id)
+    .eq("id", userId)
     .maybeSingle();
 
   // No es lo mismo no tener perfil que no poder consultarlo. Antes ambos casos
@@ -76,11 +81,11 @@ export const requireStaff = cache(async (): Promise<StaffSession> => {
   }
 
   return {
-    user,
+    userId,
     supabase,
     profile: {
-      id: asString(data.id, user.id),
-      email: asNullableString(data.email) ?? user.email ?? null,
+      id: asString(data.id, userId),
+      email: asNullableString(data.email) ?? claimEmail,
       fullName: asNullableString(data.full_name),
       role: asEnum<AdminRole>(data.role, ["admin", "editor"], "editor"),
     },

@@ -44,12 +44,15 @@ async function handleAdmin(request: NextRequest): Promise<NextResponse> {
     },
   });
 
-  // getUser() revalida el token contra el servidor de Supabase. No usar
-  // getSession() aqui: lee la cookie sin verificar la firma.
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
+  // getClaims() verifica la FIRMA del token con la clave publica del proyecto
+  // (ES256), usando WebCrypto y sin salir a la red: la clave se descarga una
+  // vez de /.well-known/jwks.json y se cachea. Antes aqui habia un getUser(),
+  // que hace lo mismo pero preguntandoselo al servidor de Supabase en cada
+  // navegacion. La seguridad es la misma —se comprueba la firma de verdad, no
+  // como getSession(), que se limita a leer la cookie— y se ahorra un viaje
+  // completo por cada peticion al panel.
+  const { data, error } = await supabase.auth.getClaims();
+  const user = data?.claims ?? null;
 
   // Si no se pudo verificar el token seguimos expulsando (fallar cerrado es lo
   // correcto), pero se deja constancia: sin esta linea, no poder hablar con

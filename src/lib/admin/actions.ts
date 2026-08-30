@@ -219,13 +219,13 @@ export async function deleteService(id: string): Promise<ActionResult> {
 
 export async function saveSettings(input: unknown): Promise<ActionResult> {
   try {
-    const { supabase, user } = await requireStaff();
+    const { supabase, userId } = await requireStaff();
     const values = settingsSchema.parse(input);
 
     const { error } = await supabase.from("site_settings").upsert({
       id: 1,
       data: values,
-      updated_by: user.id,
+      updated_by: userId,
     });
 
     if (error) return { ok: false, error: describeDbError(error.message) };
