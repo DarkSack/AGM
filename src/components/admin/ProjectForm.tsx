@@ -143,6 +143,15 @@ export function ProjectForm({
         setFeedback({ kind: "error", text: result.error });
         return;
       }
+      // El estado local tiene que reflejar lo que se acaba de guardar. Sin
+      // esto, tras "Guardar y publicar" el formulario seguia en borrador y el
+      // siguiente "Guardar" despublicaba el proyecto sin avisar.
+      setValues((current) => ({
+        ...current,
+        status: finalStatus,
+        slug: payload.slug,
+        id: result.id ?? current.id,
+      }));
       setFeedback({ kind: "ok", text: result.message ?? "Guardado." });
       if (isNew && result.id) {
         router.replace(`/admin/proyectos/${result.id}`);
