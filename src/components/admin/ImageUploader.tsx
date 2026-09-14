@@ -145,20 +145,10 @@ export function ImageUploader({
     reorder(index, target);
   };
 
-  const remove = async (index: number) => {
-    const image = images[index];
-    if (!image) return;
-
-    // Se borra tambien del bucket para no dejar archivos huerfanos ocupando
-    // cuota. Si falla, la imagen desaparece igualmente de la galeria: dejarla
-    // en el formulario por un error de almacenamiento seria peor.
-    try {
-      const supabase = createClient();
-      await supabase.storage.from(STORAGE_BUCKET).remove([image.id]);
-    } catch {
-      // Silencioso a proposito: el archivo puede no existir ya.
-    }
-
+  const remove = (index: number) => {
+    // Solo se quita del formulario. El archivo NO se borra del bucket aqui: si
+    // la persona sale sin guardar, lo publicado seguiria apuntando a el y se
+    // veria roto. La limpieza la hace la Server Action despues de guardar.
     onChange(
       images
         .filter((_, position) => position !== index)
@@ -287,7 +277,7 @@ export function ImageUploader({
                   ) : null}
                   <button
                     type="button"
-                    onClick={() => void remove(index)}
+                    onClick={() => remove(index)}
                     className="ml-auto rounded-[3px] px-2.5 py-1 font-sans text-xs text-fg-subtle transition-colors hover:text-accent"
                   >
                     Eliminar

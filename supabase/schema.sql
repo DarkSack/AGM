@@ -107,6 +107,39 @@ create policy profiles_update_own on public.profiles
   using (id = auth.uid() or internal.is_admin())
   with check (id = auth.uid() or internal.is_admin());
 
+-- La política anterior deja a cada usuario editar su propia fila, y RLS no
+-- puede restringir columnas: sin este trigger un editor se daba rol de admin
+-- con un simple UPDATE desde la API.
+--
+-- La regla solo se aplica a peticiones que llegan por la API (llevan JWT). Desde
+-- el SQL Editor no hay JWT, y el alta del primer administrador sigue
+-- funcionando. `security definer` porque `authenticated` no tiene acceso al
+-- esquema `internal` desde código plpgsql.
+create or replace function public.guard_profile_changes()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  if coalesce(auth.jwt()->>'role', '') in ('authenticated', 'anon') then
+    if new.id is distinct from old.id then
+      raise exception 'No se puede cambiar el id de un perfil.'
+        using errcode = '42501';
+    end if;
+    if new.role is distinct from old.role and not internal.is_admin() then
+      raise exception 'Solo un administrador puede cambiar roles (row-level security).'
+        using errcode = '42501';
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists profiles_guard on public.profiles;
+create trigger profiles_guard before update on public.profiles
+  for each row execute function public.guard_profile_changes();
+
 -- Solo un admin da de alta a otro miembro del equipo.
 drop policy if exists profiles_admin_insert on public.profiles;
 create policy profiles_admin_insert on public.profiles
@@ -290,6 +323,40 @@ create policy content_blocks_staff_write on public.content_blocks
   for all to authenticated
   using (internal.is_staff())
   with check (internal.is_staff());
+
+-- Reemplaza la composición completa en una sola transacción. Borrar e insertar
+-- desde la aplicación eran dos peticiones: si fallaba la segunda, la tabla se
+-- quedaba vacía y se perdía la composición.
+--
+-- `security invoker`: corre con los permisos de quien llama, así que las
+-- políticas RLS de arriba siguen siendo las que deciden. Quien no es staff no
+-- borra ninguna fila y su INSERT falla, lo que deshace la transacción entera.
+create or replace function public.replace_content_blocks(blocks jsonb)
+returns void
+language plpgsql
+security invoker
+set search_path = pg_catalog, pg_temp
+as $$
+begin
+  if jsonb_typeof(blocks) is distinct from 'array' then
+    raise exception 'blocks debe ser un array.' using errcode = '22023';
+  end if;
+
+  -- `where true`: Supabase rechaza DELETE sin WHERE en peticiones de la API.
+  delete from public.content_blocks where true;
+
+  insert into public.content_blocks (type, position, enabled, data)
+  select
+    item->>'type',
+    (ord - 1)::integer,
+    coalesce((item->>'enabled')::boolean, true),
+    coalesce(item->'data', '{}'::jsonb)
+  from jsonb_array_elements(blocks) with ordinality as t(item, ord);
+end;
+$$;
+
+revoke all on function public.replace_content_blocks(jsonb) from public, anon;
+grant execute on function public.replace_content_blocks(jsonb) to authenticated;
 
 -- ---------------------------------------------------------------------
 -- contact_messages — envíos del formulario público

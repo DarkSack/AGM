@@ -51,8 +51,9 @@ export function ServicesEditor({ services }: { services: Service[] }) {
       ),
     );
 
-  function persist(service: Service) {
+  function persist(service: Service, index: number) {
     setFeedback(null);
+    const wasNew = !service.id;
     startTransition(async () => {
       const result = await saveService({
         ...(service.id ? { id: service.id } : {}),
@@ -69,7 +70,17 @@ export function ServicesEditor({ services }: { services: Service[] }) {
           ? { kind: "ok", text: result.message ?? "Guardado." }
           : { kind: "error", text: result.error },
       );
-      if (result.ok) router.refresh();
+      if (!result.ok) return;
+
+      // `items` no se vuelve a sincronizar con las props tras el refresh, asi
+      // que el id nuevo se apunta aqui. Sin el, la ficha seguia siendo "nueva"
+      // y un segundo guardado la insertaba otra vez.
+      if (wasNew && result.id) {
+        const id = result.id;
+        patch(index, { id, slug: service.slug || slugify(service.title.es) });
+        setOpenId((current) => (current === `nuevo-${index}` ? id : current));
+      }
+      router.refresh();
     });
   }
 
@@ -282,7 +293,7 @@ export function ServicesEditor({ services }: { services: Service[] }) {
                     <button
                       type="button"
                       disabled={pending}
-                      onClick={() => persist(service)}
+                      onClick={() => persist(service, index)}
                       className="inline-flex h-9 items-center rounded-[3px] bg-fg px-4 text-sm font-medium text-bg transition-colors hover:bg-accent hover:text-accent-fg disabled:opacity-60"
                     >
                       Guardar servicio

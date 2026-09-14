@@ -1,8 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { redirect, unstable_rethrow } from "next/navigation";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import { removedStoragePaths } from "@/lib/storage";
+import { STORAGE_BUCKET } from "@/lib/supabase/config";
 import { requireStaff } from "./auth";
 import {
   blocksSchema,
@@ -41,6 +44,11 @@ function revalidatePublic(slug?: string): void {
 }
 
 function fail(error: unknown, fallback: string): ActionResult {
+  // `redirect()` y `notFound()` funcionan lanzando un error que Next tiene que
+  // recibir. Si se atrapa aqui, una sesion caducada no manda al login: el
+  // formulario muestra literalmente "NEXT_REDIRECT".
+  unstable_rethrow(error);
+
   if (error instanceof z.ZodError) {
     const first = error.issues[0];
     return {
@@ -54,16 +62,68 @@ function fail(error: unknown, fallback: string): ActionResult {
 
 /** Traduce los errores de Postgres a algo que una persona pueda entender. */
 function describeDbError(message: string): string {
-  if (message.includes("projects_slug_key") || message.includes("duplicate key")) {
+  if (message.includes("projects_slug_key")) {
     return "Ya existe un proyecto con ese slug. Elige otro.";
   }
-  if (message.includes("projects_slug_format")) {
+  if (message.includes("services_slug_key")) {
+    return "Ya existe un servicio con ese identificador. Elige otro.";
+  }
+  if (message.includes("duplicate key")) {
+    return "Ya existe un elemento con ese identificador. Elige otro.";
+  }
+  if (message.includes("_slug_format")) {
     return "El slug solo admite minúsculas, números y guiones.";
   }
   if (message.includes("row-level security")) {
     return "Tu usuario no tiene permisos para esta operación.";
   }
+  if (message.includes("replace_content_blocks")) {
+    return "Falta actualizar la base de datos: vuelve a ejecutar supabase/schema.sql en el SQL Editor de Supabase.";
+  }
   return message;
+}
+
+/** URL de todas las imagenes que referencia una fila de `projects`. */
+function projectImageUrls(row: unknown): string[] {
+  if (typeof row !== "object" || row === null) return [];
+  const { cover_image, gallery, seo } = row as {
+    cover_image?: unknown;
+    gallery?: unknown;
+    seo?: unknown;
+  };
+  const images = [cover_image, ...(Array.isArray(gallery) ? gallery : [])];
+  const urls = images.flatMap((image) =>
+    typeof image === "object" &&
+    image !== null &&
+    typeof (image as { url?: unknown }).url === "string"
+      ? [(image as { url: string }).url]
+      : [],
+  );
+  const ogImage = (seo as { ogImage?: unknown } | null | undefined)?.ogImage;
+  if (typeof ogImage === "string") urls.push(ogImage);
+  return urls;
+}
+
+/**
+ * Borra del bucket los archivos que un proyecto ha dejado de usar.
+ *
+ * Se hace aqui, despues de guardar, y no al pulsar "Eliminar" en la galeria:
+ * antes el archivo desaparecia del bucket en ese momento, y si la persona
+ * salia sin guardar el proyecto publicado se quedaba con la imagen rota.
+ *
+ * Un fallo al limpiar no invalida el guardado; solo deja un archivo huerfano.
+ */
+async function removeUnusedImages(
+  supabase: SupabaseClient,
+  before: readonly string[],
+  after: readonly string[],
+): Promise<void> {
+  const paths = removedStoragePaths(before, after);
+  if (paths.length === 0) return;
+  const { error } = await supabase.storage.from(STORAGE_BUCKET).remove(paths);
+  if (error) {
+    console.warn("[storage] no se pudieron borrar imagenes sin uso:", error.message);
+  }
 }
 
 /* ------------------------------------------------------------------ *
@@ -96,13 +156,31 @@ export async function saveProject(input: unknown): Promise<ActionResult> {
     };
 
     if (values.id) {
+      const { data: previous } = await supabase
+        .from("projects")
+        .select("slug, cover_image, gallery, seo")
+        .eq("id", values.id)
+        .maybeSingle();
+
       const { error } = await supabase
         .from("projects")
         .update(row)
         .eq("id", values.id);
       if (error) return { ok: false, error: describeDbError(error.message) };
 
+      await removeUnusedImages(
+        supabase,
+        projectImageUrls(previous),
+        projectImageUrls(row),
+      );
+
       revalidatePublic(values.slug);
+      // Si cambio el slug, la URL antigua tambien tiene que dejar de servirse
+      // desde la cache.
+      const previousSlug = (previous as { slug?: unknown } | null)?.slug;
+      if (typeof previousSlug === "string" && previousSlug !== values.slug) {
+        revalidatePublic(previousSlug);
+      }
       return { ok: true, message: "Proyecto actualizado.", id: values.id };
     }
 
@@ -126,10 +204,19 @@ export async function deleteProject(id: string): Promise<ActionResult> {
     const { supabase } = await requireStaff();
     z.string().uuid().parse(id);
 
+    const { data: previous } = await supabase
+      .from("projects")
+      .select("slug, cover_image, gallery, seo")
+      .eq("id", id)
+      .maybeSingle();
+
     const { error } = await supabase.from("projects").delete().eq("id", id);
     if (error) return { ok: false, error: describeDbError(error.message) };
 
-    revalidatePublic();
+    await removeUnusedImages(supabase, projectImageUrls(previous), []);
+
+    const previousSlug = (previous as { slug?: unknown } | null)?.slug;
+    revalidatePublic(typeof previousSlug === "string" ? previousSlug : undefined);
     return { ok: true, message: "Proyecto eliminado." };
   } catch (error) {
     return fail(error, "No se pudo eliminar el proyecto.");
@@ -186,13 +273,22 @@ export async function saveService(input: unknown): Promise<ActionResult> {
         .update(row)
         .eq("id", values.id);
       if (error) return { ok: false, error: describeDbError(error.message) };
-    } else {
-      const { error } = await supabase.from("services").insert(row);
-      if (error) return { ok: false, error: describeDbError(error.message) };
+
+      revalidatePublic();
+      return { ok: true, message: "Servicio guardado.", id: values.id };
     }
 
+    // Se devuelve el id para que el editor deje de tratar la ficha como nueva:
+    // sin el, un segundo "Guardar" volvia a insertarla y chocaba con el slug.
+    const { data, error } = await supabase
+      .from("services")
+      .insert(row)
+      .select("id")
+      .single();
+    if (error) return { ok: false, error: describeDbError(error.message) };
+
     revalidatePublic();
-    return { ok: true, message: "Servicio guardado." };
+    return { ok: true, message: "Servicio guardado.", id: String(data.id) };
   } catch (error) {
     return fail(error, "No se pudo guardar el servicio.");
   }
@@ -241,33 +337,34 @@ export async function saveSettings(input: unknown): Promise<ActionResult> {
  * Guarda la composicion completa de bloques.
  *
  * Se reemplaza el conjunto entero en lugar de aplicar diferencias: son pocas
- * filas y asi el orden guardado es exactamente el que se ve en pantalla, sin
- * estados intermedios si algo falla a mitad.
+ * filas y asi el orden guardado es exactamente el que se ve en pantalla.
+ *
+ * El borrado y la insercion van en una sola funcion de Postgres, que corre en
+ * una transaccion. Hechos como dos peticiones separadas, un fallo en la
+ * insercion dejaba la tabla vacia y se perdia la composicion entera.
  */
 export async function saveBlocks(input: unknown): Promise<ActionResult> {
   try {
     const { supabase } = await requireStaff();
     const blocks = blocksSchema.parse(input);
 
-    const { error: deleteError } = await supabase
-      .from("content_blocks")
-      .delete()
-      .not("id", "is", null);
+    const { error } = await supabase.rpc("replace_content_blocks", {
+      blocks: blocks.map((block) => ({
+        type: block.type,
+        enabled: block.enabled,
+        data: block.data,
+      })),
+    });
 
-    if (deleteError) {
-      return { ok: false, error: describeDbError(deleteError.message) };
-    }
-
-    if (blocks.length > 0) {
-      const { error } = await supabase.from("content_blocks").insert(
-        blocks.map((block, index) => ({
-          type: block.type,
-          position: index,
-          enabled: block.enabled,
-          data: block.data,
-        })),
-      );
-      if (error) return { ok: false, error: describeDbError(error.message) };
+    if (error) {
+      // PostgREST no nombra la funcion en todos sus mensajes de "no existe".
+      const missing = error.code === "PGRST202" || error.code === "42883";
+      return {
+        ok: false,
+        error: describeDbError(
+          missing ? `replace_content_blocks: ${error.message}` : error.message,
+        ),
+      };
     }
 
     revalidatePublic();
