@@ -11,11 +11,15 @@ import { t as pick } from "@/types/content";
 
 export const revalidate = 300;
 /**
- * Un slug que no existe (o que ya no esta publicado) devuelve 404 en lugar de
- * generarse al vuelo. Evita que se indexen paginas de borradores adivinando
- * URLs. Para revisar un borrador esta la vista previa del panel.
+ * Los slugs que no existian en el build se generan al vuelo. Con `false` un
+ * proyecto publicado desde el panel daba 404 hasta el siguiente despliegue:
+ * `revalidatePath` refresca paginas existentes, pero no crea rutas nuevas.
+ *
+ * Sigue sin poder leerse un borrador adivinando la URL: `getProjectBySlug`
+ * usa el cliente anonimo, que por RLS solo ve lo publicado, y todo lo demas
+ * acaba en `notFound()`. Para revisar un borrador esta la vista previa.
  */
-export const dynamicParams = false;
+export const dynamicParams = true;
 
 export async function generateStaticParams() {
   const projects = await getPublishedProjects();
