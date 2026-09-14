@@ -41,9 +41,14 @@ function toE164(input: string): string {
 export function resolveContact(settings: SiteSettings): ResolvedContact {
   const overrides = settings.contact;
 
-  const phoneRaw = overrides.phone?.trim() || siteConfig.contact.phoneNational;
-  const phoneE164 = overrides.phone
-    ? toE164(overrides.phone)
+  // Lo del panel se muestra tal como se escribio; el respaldo va ya agrupado
+  // ("33 1452 6836"). Antes el respaldo eran los 10 digitos pegados, y por eso
+  // los componentes acababan leyendo `siteConfig` directamente: el texto salia
+  // de la configuracion y el enlace del panel, y podian no coincidir.
+  const phoneOverride = overrides.phone?.trim() || null;
+  const phoneDisplay = phoneOverride ?? siteConfig.contact.phoneDisplay;
+  const phoneE164 = phoneOverride
+    ? toE164(phoneOverride)
     : siteConfig.contact.phoneE164;
 
   const email = overrides.email?.trim() || siteConfig.contact.email;
@@ -73,7 +78,7 @@ export function resolveContact(settings: SiteSettings): ResolvedContact {
     !overrides.addressLine;
 
   return {
-    phoneDisplay: phoneRaw,
+    phoneDisplay,
     phoneHref: `tel:${phoneE164}`,
     whatsappNumber: phoneE164.replace(/\D/g, ""),
     email,

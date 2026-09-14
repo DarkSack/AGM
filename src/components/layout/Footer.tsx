@@ -31,7 +31,9 @@ export async function Footer({ settings, locale }: FooterProps) {
             </p>
           </div>
 
-          <nav aria-labelledby="footer-nav" className="lg:col-span-3 lg:col-start-6">
+          {/* Las columnas tienen que sumar 12: con la navegacion en 3 la
+              columna "Legal" no cabia y bajaba a una segunda fila. */}
+          <nav aria-labelledby="footer-nav" className="lg:col-span-2 lg:col-start-6">
             <h2 id="footer-nav" className="eyebrow font-sans">
               {t("navHeading")}
             </h2>
@@ -48,7 +50,7 @@ export async function Footer({ settings, locale }: FooterProps) {
                   params={{ location: "footer", locale }}
                   className="font-sans text-sm text-fg-muted transition-colors hover:text-fg"
                 >
-                  {siteConfig.contact.phoneDisplay}
+                  {contact.phoneDisplay}
                 </TrackedLink>
               </li>
               <li>

@@ -35,6 +35,19 @@ describe("resolveContact — respaldo desde la configuracion", () => {
     const contact = resolveContact(sinNadaEnElPanel);
     expect(contact.email).toBe(siteConfig.contact.email);
     expect(contact.phoneHref).toBe(`tel:${siteConfig.contact.phoneE164}`);
+    expect(contact.phoneDisplay).toBe(siteConfig.contact.phoneDisplay);
+    expect(contact.whatsappNumber).toBe(siteConfig.contact.whatsapp.number);
+  });
+
+  /**
+   * Regresion. El texto del telefono salia de `siteConfig` y el enlace del
+   * panel: al cambiar el numero en el panel se mostraba uno y se marcaba otro.
+   */
+  it("el texto, el enlace y WhatsApp salen del mismo numero", () => {
+    const contact = resolveContact(settingsCon({ phone: "33 9876 5432" }));
+    expect(contact.phoneDisplay).toBe("33 9876 5432");
+    expect(contact.phoneHref).toBe("tel:+523398765432");
+    expect(contact.whatsappNumber).toBe("523398765432");
   });
 
   /**

@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import type { Locale } from "@/config/site";
 import { usePathname } from "@/i18n/navigation";
 import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
+import type { ResolvedContact } from "@/lib/contactInfo";
 import { cn } from "@/lib/cn";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { Logo } from "./Logo";
@@ -20,7 +21,7 @@ import { ThemeToggle } from "./ThemeToggle";
  * resalta la seccion que se esta leyendo, lo que en una pagina larga de scroll
  * es la unica pista de orientacion que tiene el usuario.
  */
-export function Header() {
+export function Header({ contact }: { contact: ResolvedContact }) {
   const t = useTranslations("nav");
   const locale = useLocale() as Locale;
   const pathname = usePathname();
@@ -156,6 +157,7 @@ export function Header() {
         onNavigate={onNavClick}
         isHome={isHome}
         locale={locale}
+        contact={contact}
       />
     </>
   );

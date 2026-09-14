@@ -54,7 +54,7 @@ export async function Contact({ settings, locale }: ContactProps) {
 
             <div className="mt-10" data-reveal>
               <TrackedLink
-                href={whatsappUrl(locale)}
+                href={whatsappUrl(locale, contact.whatsappNumber)}
                 target="_blank"
                 rel="noopener noreferrer"
                 event={ANALYTICS_EVENTS.whatsappClick}
@@ -74,7 +74,7 @@ export async function Contact({ settings, locale }: ContactProps) {
                   params={{ location: "contact_section", locale }}
                   className="text-fg transition-colors hover:text-accent"
                 >
-                  {siteConfig.contact.phoneDisplay}
+                  {contact.phoneDisplay}
                 </TrackedLink>
               </ContactRow>
 

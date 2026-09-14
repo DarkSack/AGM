@@ -2,8 +2,9 @@
 
 import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { siteConfig, telHref, whatsappUrl, type Locale } from "@/config/site";
+import { whatsappUrl, type Locale } from "@/config/site";
 import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
+import type { ResolvedContact } from "@/lib/contactInfo";
 import { cn } from "@/lib/cn";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { NAV_SECTIONS, sectionHref } from "./navigation";
@@ -14,6 +15,8 @@ interface MobileMenuProps {
   onNavigate: (sectionId: string) => void;
   isHome: boolean;
   locale: Locale;
+  /** Datos de contacto ya resueltos con lo editado en el panel. */
+  contact: ResolvedContact;
 }
 
 /**
@@ -30,6 +33,7 @@ export function MobileMenu({
   onNavigate,
   isHome,
   locale,
+  contact,
 }: MobileMenuProps) {
   const t = useTranslations("nav");
   const tContact = useTranslations("contact");
@@ -95,7 +99,7 @@ export function MobileMenu({
           <span className="eyebrow">{tContact("directLabel")}</span>
 
           <a
-            href={whatsappUrl(locale)}
+            href={whatsappUrl(locale, contact.whatsappNumber)}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() =>
@@ -110,7 +114,7 @@ export function MobileMenu({
           </a>
 
           <a
-            href={telHref}
+            href={contact.phoneHref}
             onClick={() =>
               track(ANALYTICS_EVENTS.phoneClick, {
                 location: "mobile_menu",
@@ -119,11 +123,11 @@ export function MobileMenu({
             }
             className="font-sans text-base text-fg-muted transition-colors hover:text-accent"
           >
-            {siteConfig.contact.phoneDisplay}
+            {contact.phoneDisplay}
           </a>
 
           <a
-            href={`mailto:${siteConfig.contact.email}`}
+            href={contact.emailHref}
             onClick={() =>
               track(ANALYTICS_EVENTS.emailClick, {
                 location: "mobile_menu",
@@ -132,7 +136,7 @@ export function MobileMenu({
             }
             className="font-sans text-base break-all text-fg-muted transition-colors hover:text-accent"
           >
-            {siteConfig.contact.email}
+            {contact.email}
           </a>
         </div>
 

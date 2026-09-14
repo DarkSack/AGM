@@ -173,10 +173,16 @@ export const gtmContainerId = (() => {
 export const googleSiteVerification =
   process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim() || null;
 
-export function whatsappUrl(locale: Locale): string {
+/**
+ * Enlace de WhatsApp con el mensaje precargado.
+ *
+ * Recibe el numero porque el que manda es el del panel (`resolveContact`); el
+ * de esta configuracion solo es el respaldo.
+ */
+export function whatsappUrl(
+  locale: Locale,
+  number: string = siteConfig.contact.whatsapp.number,
+): string {
   const text = siteConfig.contact.whatsapp.prefilledMessage[locale];
-  return `https://wa.me/${siteConfig.contact.whatsapp.number}?text=${encodeURIComponent(text)}`;
+  return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
 }
-
-export const telHref = `tel:${siteConfig.contact.phoneE164}`;
-export const mailtoHref = `mailto:${siteConfig.contact.email}`;

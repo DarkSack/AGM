@@ -12,6 +12,7 @@ import { Header } from "@/components/layout/Header";
 import { ThemeKeeper } from "@/components/layout/ThemeKeeper";
 import { ThemeScript } from "@/components/layout/ThemeScript";
 import { RevealObserver } from "@/components/ui/RevealObserver";
+import { resolveContact } from "@/lib/contactInfo";
 import "../../globals.css";
 
 export function generateStaticParams() {
@@ -102,7 +103,7 @@ export default async function LocaleLayout({
             {t("skipToContent")}
           </a>
 
-          <Header />
+          <Header contact={resolveContact(settings)} />
 
           <main id="contenido">{children}</main>
 
