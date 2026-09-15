@@ -73,6 +73,11 @@ ejecuta el contenido de [`supabase/schema.sql`](supabase/schema.sql). Crea las
 tablas, los tipos, las políticas RLS y el bucket de imágenes. Es idempotente:
 se puede volver a ejecutar sin romper nada.
 
+**Después de actualizar el código, vuelve a ejecutarlo.** Las funciones,
+triggers y columnas nuevas (`replace_content_blocks`, `previous_slugs`, el
+límite de envíos del formulario) se añaden ahí. Si falta alguna, el panel lo
+dice con un aviso en lugar de fallar en silencio.
+
 ### 2. Variables de entorno
 
 En **Project Settings → API** copia la URL y la clave `anon` a `.env.local`:
@@ -111,8 +116,8 @@ Ya puedes entrar en `/admin`.
 
 | Sección | Qué permite |
 |---|---|
-| **Inicio** | Cifras del sitio y última actualización. |
-| **Proyectos** | Alta, edición y borrado. Publicar y despublicar desde el propio listado. Galería con subida múltiple, reordenación, portada y texto alternativo por imagen e idioma. Vista previa de borradores. |
+| **Inicio** | Cifras del sitio, última actualización y limpieza de imágenes sin uso. |
+| **Proyectos** | Alta, edición y borrado. Publicar y despublicar desde el propio listado. Galería con subida múltiple, reordenación, portada y texto alternativo por imagen e idioma. Vista previa de borradores. Cambiar el slug de un proyecto publicado deja la URL antigua redirigiendo a la nueva. |
 | **Mensajes** | Solicitudes recibidas por el formulario, con marcado de leído. |
 | **Servicios** | Crear, reordenar, activar/desactivar, cambiar icono y textos. |
 | **Contenido** | Titular de portada, botones, presentación del despacho, método de trabajo y valores. |
@@ -145,14 +150,21 @@ traducción a medias sin darse cuenta.
   validación del navegador solo sirve para dar el error antes.
 - **Sin secretos en el frontend.** Solo variables `NEXT_PUBLIC_`, todas
   públicas por naturaleza.
-- Formulario con trampa para bots y límite de envíos por IP.
+- Formulario con trampa para bots y límite de envíos en dos capas: por IP en
+  la ruta de API y, en la base de datos, un trigger que frena los envíos
+  repetidos aunque alguien inserte directamente con la clave `anon`.
+- **Un editor no puede darse rol de admin**: un trigger impide cambiar `role`
+  (o `id`) en `profiles` desde la API salvo a un administrador.
+- **Guardados atómicos**: la composición de la portada se reemplaza en una sola
+  transacción; las imágenes se borran del bucket después de guardar, no antes.
 
 ---
 
 ## SEO
 
 Implementado: metadata por idioma, canonical, `hreflang` con `x-default`,
-Open Graph y Twitter Cards, `sitemap.xml` con alternativas de idioma,
+Open Graph y Twitter Cards (con imagen por defecto en `/og.png` si la página no
+tiene una propia), favicon, `sitemap.xml` con alternativas de idioma,
 `robots.txt`, y JSON-LD (`ProfessionalService` + `LocalBusiness`, `WebSite`,
 `WebPage`, `CollectionPage`, y `BreadcrumbList` en las fichas de proyecto).
 
@@ -164,7 +176,9 @@ antigüedad del dominio, los enlaces entrantes y la competencia local.
 
 **No se publica lo que no está confirmado.** Mientras `siteConfig.location`
 tenga `verified: false`, la dirección y las coordenadas no se emiten en el
-JSON-LD y `areaServed` se omite. Un dato inventado en datos estructurados no
+JSON-LD y `areaServed` se omite. Del mismo modo, cualquier texto con
+marcadores entre corchetes (`[AÑO]`, `[Nombre del Arquitecto]`) se oculta en
+el sitio público en lugar de mostrarse. Un dato inventado en datos estructurados no
 solo no ayuda al SEO local: puede acarrear una acción manual de Google por
 marcado engañoso.
 
@@ -211,21 +225,21 @@ personalización de anuncios.
 
 Está todo marcado en el código con corchetes o con el comentario `VERIFICAR`:
 
-1. **Dirección del despacho.** En la papelería aparece algo parecido a
-   *Avenida Sierra Leona 424-B, Colonia Sierra Margarita, C.P. 45140*, pero no
-   es legible con certeza en la imagen de referencia. El C.P. y la lada 33
-   apuntan a Zapopan, Jalisco. **Hay que confirmarlo** antes de ponerlo en
-   `src/config/site.ts` y cambiar `verified` a `true`.
-2. **URL real de la página de Facebook.** Mientras sea `null`, el sitio muestra
-   el nombre sin enlazarlo y no lo incluye en `sameAs`.
-3. **Datos del arquitecto:** nombre, titulación y cédula.
-4. **Fotografías reales.** Los proyectos actuales son propuestas conceptuales
+Ya confirmados: la dirección (Avenida Acueducto 829-B, Col. Santa Margarita,
+Zapopan, con `verified: true` y coordenadas) y la página de Facebook.
+
+1. **Aviso de privacidad.** Es lo más urgente: el formulario recoge nombre,
+   correo y teléfono, y la ley mexicana de protección de datos exige un aviso
+   real. El texto actual es un marcador y la página está en `noindex` hasta que
+   se redacte.
+2. **Datos del arquitecto:** nombre, titulación y cédula. Mientras sean
+   marcadores, la ficha lateral de «Sobre AGM» no se muestra.
+3. **Fotografías reales.** Los proyectos actuales son propuestas conceptuales
    de demostración; las imágenes son dibujos de línea generados por
    `scripts/generate-placeholders.mjs`, no fotos de banco de imágenes. Se
-   sustituyen subiendo fotos desde el panel.
-5. **Aviso de privacidad.** El texto actual es un marcador y la página está en
-   `noindex` hasta que se redacte.
-6. **Horario de atención**, si se quiere publicar.
+   sustituyen subiendo fotos desde el panel. Mientras no haya ningún proyecto
+   publicado en la base de datos, el sitio muestra estos de muestra.
+4. **Horario de atención**, si se quiere publicar.
 
 ---
 
