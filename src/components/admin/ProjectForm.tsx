@@ -22,6 +22,7 @@ import {
   TextField,
 } from "./fields";
 import { ImageUploader } from "./ImageUploader";
+import { sameContent, useUnsavedChanges } from "./useUnsavedChanges";
 
 const CATEGORY_LABELS: Record<ProjectCategory, string> = {
   residential: "Residencial",
@@ -94,6 +95,11 @@ export function ProjectForm({
     initial.coverImage ? [initial.coverImage, ...initial.gallery] : initial.gallery,
   );
 
+  // Ultimo estado guardado. Si lo que hay en pantalla difiere, hay cambios
+  // sin guardar y se avisa antes de salir.
+  const [saved, setSaved] = useState(() => ({ values, images }));
+  useUnsavedChanges(!sameContent({ values, images }, saved));
+
   const update = <K extends keyof Project>(key: K, value: Project[K]) =>
     setValues((current) => ({ ...current, [key]: value }));
 
@@ -146,12 +152,11 @@ export function ProjectForm({
       // El estado local tiene que reflejar lo que se acaba de guardar. Sin
       // esto, tras "Guardar y publicar" el formulario seguia en borrador y el
       // siguiente "Guardar" despublicaba el proyecto sin avisar.
-      setValues((current) => ({
-        ...current,
-        status: finalStatus,
-        slug: payload.slug,
-        id: result.id ?? current.id,
-      }));
+      const persisted = { status: finalStatus, slug: payload.slug, id: result.id ?? values.id };
+      setValues((current) => ({ ...current, ...persisted }));
+      // Lo guardado es lo que habia al pulsar; si se edito algo mientras se
+      // guardaba, sigue contando como cambio pendiente.
+      setSaved({ values: { ...values, ...persisted }, images });
       setFeedback({ kind: "ok", text: result.message ?? "Guardado." });
       if (isNew && result.id) {
         router.replace(`/admin/proyectos/${result.id}`);

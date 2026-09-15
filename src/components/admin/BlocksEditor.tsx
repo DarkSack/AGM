@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { LOCALES } from "@/config/site";
 import { saveBlocks } from "@/lib/admin/actions";
 import { useDragReorder } from "./useDragReorder";
+import { sameContent, useUnsavedChanges } from "./useUnsavedChanges";
 import { BLOCK_TYPES, type BlockType, type ContentBlock, type Localized, type Project } from "@/types/content";
 import { ImageUploader } from "./ImageUploader";
 import { LocalizedField, SelectField, TextField } from "./fields";
@@ -102,6 +103,10 @@ export function BlocksEditor({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [blocks, setBlocks] = useState<ContentBlock[]>(initialBlocks);
+  // La composicion solo se aplica al pulsar "Guardar": es la pantalla donde mas
+  // facil es salir creyendo que el cambio ya esta hecho.
+  const [saved, setSaved] = useState<ContentBlock[]>(initialBlocks);
+  useUnsavedChanges(!sameContent(blocks, saved));
   const [openId, setOpenId] = useState<string | null>(null);
   const [adding, setAdding] = useState<BlockType>("text");
   const [feedback, setFeedback] = useState<
@@ -134,6 +139,7 @@ export function BlocksEditor({
 
   function save() {
     setFeedback(null);
+    const submitted = blocks;
     startTransition(async () => {
       const result = await saveBlocks(
         blocks.map((block, position) => ({
@@ -149,7 +155,10 @@ export function BlocksEditor({
           ? { kind: "ok", text: result.message ?? "Guardado." }
           : { kind: "error", text: result.error },
       );
-      if (result.ok) router.refresh();
+      if (result.ok) {
+        setSaved(submitted);
+        router.refresh();
+      }
     });
   }
 

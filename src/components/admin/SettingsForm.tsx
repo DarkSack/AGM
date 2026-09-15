@@ -7,6 +7,7 @@ import { saveSettings } from "@/lib/admin/actions";
 import type { Localized, SiteSettings } from "@/types/content";
 import { ImageUploader } from "./ImageUploader";
 import { LocalizedField, TextField } from "./fields";
+import { sameContent, useUnsavedChanges } from "./useUnsavedChanges";
 
 const emptyLocalized = (): Localized =>
   Object.fromEntries(LOCALES.map((locale) => [locale, ""])) as Localized;
@@ -31,12 +32,15 @@ export function SettingsForm({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [values, setValues] = useState<SiteSettings>(settings);
+  const [saved, setSaved] = useState<SiteSettings>(settings);
+  useUnsavedChanges(!sameContent(values, saved));
   const [feedback, setFeedback] = useState<
     { kind: "ok" | "error"; text: string } | null
   >(null);
 
   function save() {
     setFeedback(null);
+    const submitted = values;
     startTransition(async () => {
       // Se envia el objeto completo, no solo la seccion visible.
       const result = await saveSettings({
@@ -54,7 +58,10 @@ export function SettingsForm({
           ? { kind: "ok", text: result.message ?? "Guardado." }
           : { kind: "error", text: result.error },
       );
-      if (result.ok) router.refresh();
+      if (result.ok) {
+        setSaved(submitted);
+        router.refresh();
+      }
     });
   }
 

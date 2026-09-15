@@ -9,6 +9,7 @@ import { SERVICE_ICON_KEYS, ServiceIcon } from "@/components/ui/ServiceIcon";
 import type { Localized, Service } from "@/types/content";
 import { CheckboxField, LocalizedField, SelectField, TextField } from "./fields";
 import { useDragReorder } from "./useDragReorder";
+import { sameContent, useUnsavedChanges } from "./useUnsavedChanges";
 
 const emptyLocalized = (): Localized =>
   Object.fromEntries(LOCALES.map((locale) => [locale, ""])) as Localized;
@@ -40,6 +41,21 @@ export function ServicesEditor({ services }: { services: Service[] }) {
   const [pending, startTransition] = useTransition();
   const [items, setItems] = useState<Service[]>(services);
   const [openId, setOpenId] = useState<string | null>(null);
+
+  // Version guardada de cada servicio. La posicion no cuenta: el orden se
+  // guarda solo al moverlo. Una ficha nueva cuenta como cambio en cuanto tiene
+  // nombre.
+  const [savedById, setSavedById] = useState<Record<string, Service>>(() =>
+    Object.fromEntries(services.map((service) => [service.id, service])),
+  );
+  const contentOf = (service: Service) => ({ ...service, position: 0 });
+  useUnsavedChanges(
+    items.some((item) => {
+      if (!item.id) return item.title.es.trim().length > 0;
+      const stored = savedById[item.id];
+      return !stored || !sameContent(contentOf(item), contentOf(stored));
+    }),
+  );
   const [feedback, setFeedback] = useState<
     { kind: "ok" | "error"; text: string } | null
   >(null);
@@ -72,12 +88,15 @@ export function ServicesEditor({ services }: { services: Service[] }) {
       );
       if (!result.ok) return;
 
+      const id = result.id ?? service.id;
+      const slug = service.slug || slugify(service.title.es);
+      setSavedById((current) => ({ ...current, [id]: { ...service, id, slug } }));
+
       // `items` no se vuelve a sincronizar con las props tras el refresh, asi
       // que el id nuevo se apunta aqui. Sin el, la ficha seguia siendo "nueva"
       // y un segundo guardado la insertaba otra vez.
       if (wasNew && result.id) {
-        const id = result.id;
-        patch(index, { id, slug: service.slug || slugify(service.title.es) });
+        patch(index, { id, slug });
         setOpenId((current) => (current === `nuevo-${index}` ? id : current));
       }
       router.refresh();
