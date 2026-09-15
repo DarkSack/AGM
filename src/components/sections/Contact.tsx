@@ -11,6 +11,8 @@ import { ContactForm } from "./ContactForm";
 interface ContactProps {
   settings: SiteSettings;
   locale: Locale;
+  /** Numeral editorial segun la posicion en la pagina. */
+  index: string;
 }
 
 /**
@@ -20,7 +22,7 @@ interface ContactProps {
  * correo) para quien quiere resolverlo en un minuto, a la derecha el
  * formulario para quien prefiere dejar el detalle por escrito.
  */
-export async function Contact({ settings, locale }: ContactProps) {
+export async function Contact({ settings, locale, index }: ContactProps) {
   const t = await getTranslations("contact");
   const contact = resolveContact(settings);
 
@@ -30,7 +32,7 @@ export async function Contact({ settings, locale }: ContactProps) {
         <div className="grid gap-14 lg:grid-cols-12 lg:gap-16">
           <div className="lg:col-span-5">
             <div className="flex items-center gap-4" data-reveal>
-              <span className="numeral">06</span>
+              <span className="numeral">{index}</span>
               <span aria-hidden="true" className="h-px w-8 bg-line-strong" />
               <span className="eyebrow">{t("eyebrow")}</span>
             </div>

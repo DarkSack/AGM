@@ -7,6 +7,8 @@ import { ProjectCard } from "./ProjectCard";
 interface ProjectsProps {
   projects: Project[];
   locale: Locale;
+  /** Numeral editorial segun la posicion en la pagina. */
+  index: string;
 }
 
 /**
@@ -25,7 +27,7 @@ const LAYOUT = [
   { span: 6, aspect: "16/10" },
 ] as const;
 
-export async function Projects({ projects, locale }: ProjectsProps) {
+export async function Projects({ projects, locale, index }: ProjectsProps) {
   const t = await getTranslations("projects");
 
   const hasConcepts = projects.some((project) => project.isConcept);
@@ -35,7 +37,7 @@ export async function Projects({ projects, locale }: ProjectsProps) {
       <div className="container-editorial">
         <SectionHeading
           id="proyectos-title"
-          index="03"
+          index={index}
           eyebrow={t("eyebrow")}
           title={t("title")}
           intro={t("intro")}

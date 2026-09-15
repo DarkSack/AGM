@@ -6,6 +6,8 @@ import { t as pick, type SiteSettings } from "@/types/content";
 interface MethodProps {
   steps: SiteSettings["method"];
   locale: Locale;
+  /** Numeral editorial segun la posicion en la pagina. */
+  index: string;
 }
 
 /**
@@ -15,7 +17,7 @@ interface MethodProps {
  * sobre la linea, con el numeral en gran tamano como ancla visual. Se lee de
  * arriba abajo igual que avanza un proyecto.
  */
-export async function Method({ steps, locale }: MethodProps) {
+export async function Method({ steps, locale, index }: MethodProps) {
   const t = await getTranslations("method");
 
   return (
@@ -23,7 +25,7 @@ export async function Method({ steps, locale }: MethodProps) {
       <div className="container-editorial">
         <SectionHeading
           id="metodo-title"
-          index="04"
+          index={index}
           eyebrow={t("eyebrow")}
           title={t("title")}
           intro={t("intro")}

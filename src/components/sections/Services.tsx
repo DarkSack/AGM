@@ -10,6 +10,8 @@ import { t as pick, type Service } from "@/types/content";
 interface ServicesProps {
   services: Service[];
   locale: Locale;
+  /** Numeral editorial segun la posicion en la pagina. */
+  index: string;
 }
 
 /**
@@ -20,7 +22,7 @@ interface ServicesProps {
  * mantiene el hilo perfectamente fino en cualquier numero de columnas y en
  * cualquier zoom, sin bordes duplicados.
  */
-export async function Services({ services, locale }: ServicesProps) {
+export async function Services({ services, locale, index }: ServicesProps) {
   const t = await getTranslations("services");
 
   return (
@@ -28,7 +30,7 @@ export async function Services({ services, locale }: ServicesProps) {
       <div className="container-editorial">
         <SectionHeading
           id="servicios-title"
-          index="02"
+          index={index}
           eyebrow={t("eyebrow")}
           title={t("title")}
           intro={t("intro")}

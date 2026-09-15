@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect, unstable_rethrow } from "next/navigation";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import { removedStoragePaths } from "@/lib/storage";
+import { removedStoragePaths, storagePathsIn } from "@/lib/storage";
 import { STORAGE_BUCKET } from "@/lib/supabase/config";
 import { requireStaff } from "./auth";
 import {
@@ -312,6 +312,36 @@ export async function saveService(input: unknown): Promise<ActionResult> {
   }
 }
 
+/**
+ * Guarda el orden de los servicios.
+ *
+ * Solo toca `position`. Antes el reordenado reutilizaba `saveService` con la
+ * ficha completa, asi que arrastrar un servicio guardaba tambien lo que se
+ * estuviera editando en otras fichas sin haber pulsado "Guardar", y los
+ * errores se descartaban en silencio.
+ */
+export async function reorderServices(ids: unknown): Promise<ActionResult> {
+  try {
+    const { supabase } = await requireStaff();
+    const ordered = z.array(z.string().uuid()).max(200).parse(ids);
+
+    const results = await Promise.all(
+      ordered.map((id, position) =>
+        supabase.from("services").update({ position }).eq("id", id),
+      ),
+    );
+    const failed = results.find((result) => result.error);
+    if (failed?.error) {
+      return { ok: false, error: describeDbError(failed.error.message) };
+    }
+
+    revalidatePublic();
+    return { ok: true, message: "Orden guardado." };
+  } catch (error) {
+    return fail(error, "No se pudo guardar el orden.");
+  }
+}
+
 export async function deleteService(id: string): Promise<ActionResult> {
   try {
     const { supabase } = await requireStaff();
@@ -434,6 +464,98 @@ export async function deleteMessage(id: string): Promise<ActionResult> {
     return { ok: true, message: "Mensaje eliminado." };
   } catch (error) {
     return fail(error, "No se pudo eliminar el mensaje.");
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Almacenamiento
+ * ------------------------------------------------------------------ */
+
+/** Los archivos mas recientes se respetan: pueden ser de un formulario abierto. */
+const ORPHAN_MIN_AGE_MS = 24 * 60 * 60 * 1000;
+
+/** Rutas de todos los archivos del bucket con su fecha de subida. */
+async function listBucketFiles(
+  supabase: SupabaseClient,
+  prefix = "",
+  depth = 0,
+): Promise<{ path: string; createdAt: string | null }[]> {
+  const files: { path: string; createdAt: string | null }[] = [];
+  const pageSize = 1000;
+
+  for (let offset = 0; ; offset += pageSize) {
+    const { data, error } = await supabase.storage
+      .from(STORAGE_BUCKET)
+      .list(prefix, { limit: pageSize, offset });
+    if (error) throw new Error(`No se pudo listar el almacenamiento: ${error.message}`);
+
+    for (const entry of data ?? []) {
+      // Marcador que crea el panel de Supabase para las carpetas vacias.
+      if (entry.name === ".emptyFolderPlaceholder") continue;
+      const path = prefix ? `${prefix}/${entry.name}` : entry.name;
+      // Las carpetas vienen sin `id`. El panel solo crea un nivel, pero se
+      // baja algo mas por si alguien subio archivos a mano.
+      if (entry.id === null) {
+        if (depth < 3) files.push(...(await listBucketFiles(supabase, path, depth + 1)));
+      } else {
+        files.push({ path, createdAt: entry.created_at ?? null });
+      }
+    }
+    if (!data || data.length < pageSize) break;
+  }
+
+  return files;
+}
+
+/**
+ * Borra del bucket las imagenes que ya no usa ningun proyecto, bloque ni ajuste.
+ *
+ * Cubre lo que no puede limpiar el guardado de cada formulario: fotos subidas
+ * y quitadas sin llegar a guardar, e imagenes retiradas de la portada o de los
+ * bloques. Si falla cualquiera de las lecturas no se borra nada: con una
+ * referencia sin leer, un archivo en uso pareceria huerfano.
+ */
+export async function cleanupOrphanMedia(): Promise<ActionResult> {
+  try {
+    const { supabase } = await requireStaff();
+
+    const [projects, blocks, settings] = await Promise.all([
+      supabase.from("projects").select("*"),
+      supabase.from("content_blocks").select("data"),
+      supabase.from("site_settings").select("data"),
+    ]);
+    const readError = projects.error ?? blocks.error ?? settings.error;
+    if (readError) return { ok: false, error: describeDbError(readError.message) };
+
+    const referenced = storagePathsIn(
+      JSON.stringify([projects.data, blocks.data, settings.data]),
+    );
+
+    const now = Date.now();
+    const orphans = (await listBucketFiles(supabase))
+      .filter((file) => !referenced.has(file.path))
+      .filter((file) => {
+        const created = file.createdAt ? Date.parse(file.createdAt) : Number.NaN;
+        return Number.isFinite(created) && now - created > ORPHAN_MIN_AGE_MS;
+      })
+      .map((file) => file.path);
+
+    if (orphans.length === 0) {
+      return { ok: true, message: "No hay imágenes sin uso." };
+    }
+
+    const { error } = await supabase.storage.from(STORAGE_BUCKET).remove(orphans);
+    if (error) return { ok: false, error: describeDbError(error.message) };
+
+    return {
+      ok: true,
+      message:
+        orphans.length === 1
+          ? "Se borró 1 imagen sin uso."
+          : `Se borraron ${orphans.length} imágenes sin uso.`,
+    };
+  } catch (error) {
+    return fail(error, "No se pudo limpiar el almacenamiento.");
   }
 }
 

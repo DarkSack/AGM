@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { MediaCleanupButton } from "@/components/admin/MediaCleanupButton";
 import { requireStaff } from "@/lib/admin/auth";
 import { getDashboardStats } from "@/lib/admin/queries";
 
@@ -82,6 +83,21 @@ export default async function DashboardPage() {
             Última actualización del sitio
           </h2>
           <p className="mt-1.5 text-sm text-fg-muted">{lastUpdate}</p>
+        </section>
+
+        <section
+          aria-labelledby="almacenamiento"
+          className="rounded-[4px] border border-line bg-bg p-5"
+        >
+          <h2 id="almacenamiento" className="text-sm font-semibold text-fg">
+            Almacenamiento de imágenes
+          </h2>
+          <p className="mt-1.5 mb-4 max-w-[70ch] text-sm leading-relaxed text-fg-muted">
+            Las fotos que se suben y luego se quitan sin guardar siguen ocupando
+            espacio. Esto borra las que no usa ningún proyecto, bloque ni texto
+            del sitio y tienen más de un día.
+          </p>
+          <MediaCleanupButton />
         </section>
 
         <section aria-labelledby="atajos">

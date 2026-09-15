@@ -42,14 +42,41 @@ export function MobileMenu({
   useEffect(() => {
     if (!open) return;
 
+    const toggle = () =>
+      document.querySelector<HTMLElement>('[aria-controls="mobile-menu"]');
+
     const onKeyDown = (event: KeyboardEvent) => {
+      // Tab no sale del menu mientras esta abierto: el ciclo incluye el boton
+      // de cerrar, que vive fuera del panel, y los enlaces del panel. Sin esto
+      // el foco acababa en la pagina que hay debajo, invisible tras el menu.
+      if (event.key === "Tab") {
+        const panel = panelRef.current;
+        const button = toggle();
+        if (!panel || !button) return;
+        const focusables = [
+          button,
+          ...panel.querySelectorAll<HTMLElement>("a[href], button:not([disabled])"),
+        ];
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        const active = document.activeElement;
+        const inside = focusables.includes(active as HTMLElement);
+
+        if (event.shiftKey && (active === first || !inside)) {
+          event.preventDefault();
+          last?.focus();
+        } else if (!event.shiftKey && (active === last || !inside)) {
+          event.preventDefault();
+          first?.focus();
+        }
+        return;
+      }
+
       if (event.key !== "Escape") return;
       onClose();
       // El foco vuelve al boton que abrio el menu. Si no, se queda en un
       // enlace que acaba de volverse `inert` y el teclado pierde la posicion.
-      document
-        .querySelector<HTMLElement>('[aria-controls="mobile-menu"]')
-        ?.focus();
+      toggle()?.focus();
     };
 
     const previousOverflow = document.body.style.overflow;

@@ -8,6 +8,8 @@ import { t as pick, type SiteSettings } from "@/types/content";
 interface AboutProps {
   settings: SiteSettings;
   locale: Locale;
+  /** Numeral editorial segun la posicion en la pagina. */
+  index: string;
 }
 
 /**
@@ -18,7 +20,7 @@ interface AboutProps {
  * marcadores explicitos: no se inventan titulos, cedulas ni anos de
  * experiencia.
  */
-export async function About({ settings, locale }: AboutProps) {
+export async function About({ settings, locale, index }: AboutProps) {
   const t = await getTranslations("about");
   const { about } = settings;
   const architectName = publicText(about.architectName);
@@ -30,7 +32,7 @@ export async function About({ settings, locale }: AboutProps) {
         <div className="grid gap-14 lg:grid-cols-12 lg:gap-16">
           <div className="lg:col-span-7 xl:col-span-7">
             <div className="flex items-center gap-4" data-reveal>
-              <span className="numeral">01</span>
+              <span className="numeral">{index}</span>
               <span aria-hidden="true" className="h-px w-8 bg-line-strong" />
               <span className="eyebrow">{t("eyebrow")}</span>
             </div>

@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { LOCALES } from "@/config/site";
-import { deleteService, saveService } from "@/lib/admin/actions";
+import { deleteService, reorderServices, saveService } from "@/lib/admin/actions";
 import { slugify } from "@/lib/slug";
 import { SERVICE_ICON_KEYS, ServiceIcon } from "@/components/ui/ServiceIcon";
 import type { Localized, Service } from "@/types/content";
@@ -97,25 +97,17 @@ export function ServicesEditor({ services }: { services: Service[] }) {
     const reordered = next.map((entry, position) => ({ ...entry, position }));
     setItems(reordered);
 
-    // Se reescribe todo el tramo entre origen y destino: arrastrando, un solo
-    // movimiento corre de sitio a todas las fichas intermedias, no solo a dos.
-    const desde = Math.min(from, to);
-    const hasta = Math.max(from, to);
+    // Se envia el orden completo y solo el orden: arrastrando, un movimiento
+    // corre de sitio a todas las fichas intermedias, y lo que se este editando
+    // en otra ficha no debe guardarse sin pulsar su boton.
+    const ids = reordered.map((entry) => entry.id).filter(Boolean);
 
     setFeedback(null);
     startTransition(async () => {
-      for (let position = desde; position <= hasta; position += 1) {
-        const entry = reordered[position];
-        if (!entry?.id) continue;
-        await saveService({
-          id: entry.id,
-          slug: entry.slug,
-          title: entry.title,
-          description: entry.description,
-          icon: entry.icon,
-          position: entry.position,
-          active: entry.active,
-        });
+      const result = await reorderServices(ids);
+      if (!result.ok) {
+        setFeedback({ kind: "error", text: result.error });
+        return;
       }
       router.refresh();
     });

@@ -5,6 +5,8 @@ import { t as pick, type SiteSettings } from "@/types/content";
 interface ValuesProps {
   values: SiteSettings["values"];
   locale: Locale;
+  /** Numeral editorial segun la posicion en la pagina. */
+  index: string;
 }
 
 /**
@@ -18,7 +20,7 @@ interface ValuesProps {
  * con el fondo; en oscuro queda por debajo de el, de modo que retrocede en vez
  * de destacar.
  */
-export async function Values({ values, locale }: ValuesProps) {
+export async function Values({ values, locale, index }: ValuesProps) {
   const t = await getTranslations("values");
 
   return (
@@ -30,7 +32,7 @@ export async function Values({ values, locale }: ValuesProps) {
       <div className="container-editorial">
         <div className="flex flex-col gap-5" data-reveal>
           <div className="flex items-center gap-4">
-            <span className="numeral text-band-subtle">05</span>
+            <span className="numeral text-band-subtle">{index}</span>
             <span aria-hidden="true" className="h-px w-8 bg-band-line" />
             <span className="eyebrow text-band-subtle">{t("eyebrow")}</span>
           </div>

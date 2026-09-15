@@ -23,6 +23,33 @@ export function storagePathFromUrl(url: string): string | null {
 }
 
 /**
+ * Todas las rutas del bucket que aparecen en un texto cualquiera.
+ *
+ * Se aplica al JSON serializado de proyectos, bloques y ajustes: asi no hace
+ * falta conocer en que campo guarda cada uno sus imagenes, y un campo nuevo con
+ * una imagen queda protegido de la limpieza sin tocar este codigo.
+ */
+export function storagePathsIn(text: string): Set<string> {
+  const marker = `/storage/v1/object/public/${STORAGE_BUCKET}/`;
+  const paths = new Set<string>();
+  let from = text.indexOf(marker);
+  while (from !== -1) {
+    const start = from + marker.length;
+    const end = text.slice(start).search(/["'?#\s\\)]/);
+    const raw = end === -1 ? text.slice(start) : text.slice(start, start + end);
+    if (raw) {
+      try {
+        paths.add(decodeURIComponent(raw));
+      } catch {
+        paths.add(raw);
+      }
+    }
+    from = text.indexOf(marker, start);
+  }
+  return paths;
+}
+
+/**
  * Archivos que estaban en `before` y ya no aparecen en `after`.
  *
  * Es lo que se puede borrar del bucket despues de guardar: una imagen que

@@ -22,6 +22,7 @@ import {
   StatsBlock,
   TextBlock,
 } from "./SimpleBlocks";
+import { sectionIndexes } from "./sectionIndexes";
 
 interface BlockRendererProps {
   blocks: ContentBlock[];
@@ -45,6 +46,9 @@ export function BlockRenderer({
   projects,
   locale,
 }: BlockRendererProps) {
+  const indexes = sectionIndexes(blocks);
+  const indexOf = (id: string) => indexes.get(id) ?? "";
+
   return (
     <>
       {blocks
@@ -54,26 +58,58 @@ export function BlockRenderer({
             case "hero":
               return <Hero key={block.id} settings={settings} locale={locale} />;
             case "about":
-              return <About key={block.id} settings={settings} locale={locale} />;
+              return (
+                <About
+                  key={block.id}
+                  index={indexOf(block.id)}
+                  settings={settings}
+                  locale={locale}
+                />
+              );
             case "services":
               return (
-                <Services key={block.id} services={services} locale={locale} />
+                <Services
+                  key={block.id}
+                  index={indexOf(block.id)}
+                  services={services}
+                  locale={locale}
+                />
               );
             case "projects":
               return (
-                <Projects key={block.id} projects={projects} locale={locale} />
+                <Projects
+                  key={block.id}
+                  index={indexOf(block.id)}
+                  projects={projects}
+                  locale={locale}
+                />
               );
             case "method":
               return (
-                <Method key={block.id} steps={settings.method} locale={locale} />
+                <Method
+                  key={block.id}
+                  index={indexOf(block.id)}
+                  steps={settings.method}
+                  locale={locale}
+                />
               );
             case "values":
               return (
-                <Values key={block.id} values={settings.values} locale={locale} />
+                <Values
+                  key={block.id}
+                  index={indexOf(block.id)}
+                  values={settings.values}
+                  locale={locale}
+                />
               );
             case "contact":
               return (
-                <Contact key={block.id} settings={settings} locale={locale} />
+                <Contact
+                  key={block.id}
+                  index={indexOf(block.id)}
+                  settings={settings}
+                  locale={locale}
+                />
               );
             case "featuredProject":
               return (
