@@ -9,7 +9,14 @@ import {
   STORAGE_BUCKET,
   isAllowedImageType,
 } from "@/lib/supabase/config";
+import { prepareImageForUpload } from "@/lib/imageResize";
 import { slugify } from "@/lib/slug";
+
+/**
+ * Tope del archivo original. Es mas alto que el del bucket porque la foto se
+ * reduce antes de subir; solo evita intentar decodificar algo desmesurado.
+ */
+const MAX_ORIGINAL_BYTES = 40 * 1024 * 1024;
 import type { ProjectImage } from "@/types/content";
 import { useDragReorder } from "./useDragReorder";
 
@@ -42,6 +49,7 @@ export function ImageUploader({
 }: ImageUploaderProps) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const readDimensions = (file: File) =>
@@ -66,21 +74,36 @@ export function ImageUploader({
       setError(null);
       setBusy(true);
 
+      const uploaded: ProjectImage[] = [];
+
       try {
         const supabase = createClient();
-        const uploaded: ProjectImage[] = [];
 
-        for (const file of Array.from(files)) {
-          if (!isAllowedImageType(file.type)) {
+        for (const original of Array.from(files)) {
+          if (!isAllowedImageType(original.type)) {
             throw new Error(
-              `«${file.name}» no es un formato admitido. Usa JPG, PNG, WebP o AVIF.`,
+              `«${original.name}» no es un formato admitido. Usa JPG, PNG, WebP o AVIF.`,
             );
           }
-          if (file.size > MAX_UPLOAD_BYTES) {
-            const mb = (MAX_UPLOAD_BYTES / 1024 / 1024).toFixed(0);
-            throw new Error(`«${file.name}» supera los ${mb} MB permitidos.`);
+          if (original.size > MAX_ORIGINAL_BYTES) {
+            throw new Error(
+              `«${original.name}» pesa más de ${MAX_ORIGINAL_BYTES / 1024 / 1024} MB.`,
+            );
           }
 
+          // Se reduce a 2400 px en WebP antes de subir. El limite del bucket
+          // se comprueba sobre el resultado: una foto de movil de 12 MB queda
+          // en unos cientos de KB y ya cabe.
+          setStatus(`Preparando «${original.name}»…`);
+          const prepared = await prepareImageForUpload(original);
+          const file = prepared.file;
+
+          if (file.size > MAX_UPLOAD_BYTES) {
+            const mb = (MAX_UPLOAD_BYTES / 1024 / 1024).toFixed(0);
+            throw new Error(`«${original.name}» supera los ${mb} MB permitidos.`);
+          }
+
+          setStatus(`Subiendo «${original.name}»…`);
           const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
           // El nombre original puede traer acentos, espacios o caracteres que
           // complican la URL; se descarta y se genera uno propio.
@@ -98,7 +121,10 @@ export function ImageUploader({
             .from(STORAGE_BUCKET)
             .getPublicUrl(path);
 
-          const { width, height } = await readDimensions(file);
+          const { width, height } =
+            prepared.width > 0
+              ? { width: prepared.width, height: prepared.height }
+              : await readDimensions(file);
 
           uploaded.push({
             id: path,
@@ -112,7 +138,6 @@ export function ImageUploader({
           });
         }
 
-        onChange([...images, ...uploaded]);
       } catch (uploadError) {
         setError(
           uploadError instanceof Error
@@ -120,7 +145,11 @@ export function ImageUploader({
             : "No se pudo subir la imagen.",
         );
       } finally {
+        // Las que ya subieron se conservan aunque falle una posterior: antes
+        // un error en la tercera foto hacia perder tambien las dos primeras.
+        if (uploaded.length > 0) onChange([...images, ...uploaded]);
         setBusy(false);
+        setStatus(null);
         if (inputRef.current) inputRef.current.value = "";
       }
     },
@@ -177,9 +206,9 @@ export function ImageUploader({
         >
           {busy ? "Subiendo…" : "Añadir imágenes"}
         </button>
-        <span className="font-sans text-xs text-fg-subtle">
-          JPG, PNG, WebP o AVIF · hasta{" "}
-          {(MAX_UPLOAD_BYTES / 1024 / 1024).toFixed(0)} MB por archivo
+        <span className="font-sans text-xs text-fg-subtle" aria-live="polite">
+          {status ??
+            "JPG, PNG, WebP o AVIF · las fotos grandes se reducen solas antes de subir"}
         </span>
       </div>
 
