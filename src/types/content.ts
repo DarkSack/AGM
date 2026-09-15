@@ -51,6 +51,8 @@ export interface Project {
   gallery: ProjectImage[];
   tags: string[];
   seo: EntitySeo;
+  /** Slugs anteriores; la ficha publica redirige desde ellos al actual. */
+  previousSlugs?: string[];
   updatedAt: string;
 }
 

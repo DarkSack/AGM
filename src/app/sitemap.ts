@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { LOCALES } from "@/config/site";
 import { getPublishedProjects } from "@/data/queries";
-import { absoluteUrl } from "@/lib/seo";
+import { HREFLANG, absoluteUrl } from "@/lib/seo";
 import type { AppPathnames } from "@/i18n/routing";
 
 /**
@@ -27,8 +27,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: number,
   ): MetadataRoute.Sitemap[number] => {
     const languages: Record<string, string> = {};
+    // Los mismos codigos (`es-MX`, `en`) que las etiquetas hreflang de cada
+    // pagina: antes aqui se usaba `es` y las dos senales no coincidian.
     for (const locale of LOCALES) {
-      languages[locale] = absoluteUrl(locale, { pathname, params });
+      languages[HREFLANG[locale]] = absoluteUrl(locale, { pathname, params });
     }
     // Version a la que Google debe mandar a quien no encaje con ningun idioma.
     languages["x-default"] = absoluteUrl("es", { pathname, params });

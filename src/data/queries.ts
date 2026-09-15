@@ -95,6 +95,16 @@ export const getProjectBySlug = cache(
   },
 );
 
+/** Proyecto publicado que antes usaba este slug, para redirigir al actual. */
+export const getProjectByPreviousSlug = cache(
+  async (slug: string): Promise<Project | null> => {
+    const projects = await getPublishedProjects();
+    return (
+      projects.find((project) => project.previousSlugs?.includes(slug)) ?? null
+    );
+  },
+);
+
 export const getBlocks = cache(async (): Promise<ContentBlock[]> => {
   const supabase = getPublicSupabase();
   if (!supabase) return defaultBlocks;

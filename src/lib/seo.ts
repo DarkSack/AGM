@@ -3,8 +3,15 @@ import { LOCALES, siteUrl, type Locale } from "@/config/site";
 import { getPathname } from "@/i18n/navigation";
 import type { AppPathnames } from "@/i18n/routing";
 
-/** Etiqueta `hreflang` completa por idioma. */
-const HREFLANG: Record<Locale, string> = {
+/** Imagen social por defecto, generada por `src/app/og.png/route.tsx`. */
+const DEFAULT_OG_IMAGE = "/og.png";
+
+/**
+ * Etiqueta `hreflang` completa por idioma. La usan la metadata de cada pagina
+ * y el sitemap: si divergen, Google recibe dos versiones distintas del mismo
+ * grupo de idiomas.
+ */
+export const HREFLANG: Record<Locale, string> = {
   es: "es-MX",
   en: "en",
 };
@@ -86,9 +93,11 @@ export function buildPageMetadata({
   params,
 }: PageMetadataInput): Metadata {
   const url = absoluteUrl(locale, { pathname, params });
+  // Sin imagen propia se usa la generada en `app/og.png`: una tarjeta social
+  // sin imagen se ve rota en WhatsApp y Facebook.
   const images = ogImage
     ? [{ url: ogImage.startsWith("http") ? ogImage : `${siteUrl}${ogImage}` }]
-    : undefined;
+    : [{ url: `${siteUrl}${DEFAULT_OG_IMAGE}`, width: 1200, height: 630 }];
 
   return {
     title: absoluteTitle ? { absolute: title } : title,
@@ -108,7 +117,7 @@ export function buildPageMetadata({
       images,
     },
     twitter: {
-      card: images ? "summary_large_image" : "summary",
+      card: "summary_large_image",
       title,
       description,
       images: images?.map((image) => image.url),

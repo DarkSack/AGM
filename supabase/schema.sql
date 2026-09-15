@@ -182,6 +182,12 @@ create table if not exists public.projects (
   constraint projects_gallery_is_array check (jsonb_typeof(gallery) = 'array')
 );
 
+-- Slugs que tuvo el proyecto antes. La ficha pública redirige (308) desde
+-- cualquiera de ellos al actual, para no perder los enlaces que Google ya
+-- tenga indexados cuando se cambia la URL de un proyecto publicado.
+alter table public.projects
+  add column if not exists previous_slugs text[] not null default '{}';
+
 create index if not exists projects_status_idx on public.projects (status);
 create index if not exists projects_position_idx on public.projects (position, created_at desc);
 
@@ -390,6 +396,42 @@ create table if not exists public.contact_messages (
 
 create index if not exists contact_messages_created_idx
   on public.contact_messages (created_at desc);
+
+-- Límite de envíos en la propia base de datos. El de la ruta de API es por IP
+-- y vive en memoria, pero la clave `anon` es pública: cualquiera puede
+-- insertar directamente contra la API de Supabase sin pasar por la ruta. Esto
+-- lo frena igual venga de donde venga.
+--
+-- `security definer`: el rol anónimo no puede leer la tabla para contar.
+create or replace function public.limit_contact_messages()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  if (
+    select count(*) from public.contact_messages
+    where lower(email) = lower(new.email)
+      and created_at > now() - interval '10 minutes'
+  ) >= 5 then
+    raise exception 'contact_rate_limited' using errcode = 'P0001';
+  end if;
+
+  if (
+    select count(*) from public.contact_messages
+    where created_at > now() - interval '10 minutes'
+  ) >= 60 then
+    raise exception 'contact_rate_limited' using errcode = 'P0001';
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists contact_messages_limit on public.contact_messages;
+create trigger contact_messages_limit before insert on public.contact_messages
+  for each row execute function public.limit_contact_messages();
 
 alter table public.contact_messages enable row level security;
 

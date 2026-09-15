@@ -96,6 +96,15 @@ export async function POST(request: Request) {
     locale: data.locale,
   });
 
+  // El trigger `limit_contact_messages` de la base de datos tiene la ultima
+  // palabra sobre el ritmo de envios, incluso entre instancias.
+  if (error?.message.includes("contact_rate_limited")) {
+    return NextResponse.json(
+      { ok: false, code: "rate_limited" },
+      { status: 429, headers: { "Retry-After": "600" } },
+    );
+  }
+
   if (error) {
     console.error("[contact] no se pudo guardar el mensaje:", error.message);
     return NextResponse.json({ ok: false, code: "storage_error" }, { status: 502 });

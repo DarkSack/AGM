@@ -77,7 +77,7 @@ function describeDbError(message: string): string {
   if (message.includes("row-level security")) {
     return "Tu usuario no tiene permisos para esta operación.";
   }
-  if (message.includes("replace_content_blocks")) {
+  if (message.includes("replace_content_blocks") || message.includes("previous_slugs")) {
     return "Falta actualizar la base de datos: vuelve a ejecutar supabase/schema.sql en el SQL Editor de Supabase.";
   }
   return message;
@@ -158,13 +158,34 @@ export async function saveProject(input: unknown): Promise<ActionResult> {
     if (values.id) {
       const { data: previous } = await supabase
         .from("projects")
-        .select("slug, cover_image, gallery, seo")
+        .select("*")
         .eq("id", values.id)
         .maybeSingle();
 
+      // Al cambiar el slug se apunta el anterior para que la ficha publica
+      // redirija desde el. Solo se escribe la columna cuando hace falta, asi
+      // que editar sin tocar el slug funciona aunque falte la migracion.
+      const oldSlug = (previous as { slug?: unknown } | null)?.slug;
+      const slugChanged = typeof oldSlug === "string" && oldSlug !== values.slug;
+      const history = (previous as { previous_slugs?: unknown } | null)
+        ?.previous_slugs;
+      const update = slugChanged
+        ? {
+            ...row,
+            previous_slugs: [
+              ...new Set([
+                ...(Array.isArray(history)
+                  ? history.filter((item): item is string => typeof item === "string")
+                  : []),
+                oldSlug,
+              ]),
+            ].filter((item) => item !== values.slug),
+          }
+        : row;
+
       const { error } = await supabase
         .from("projects")
-        .update(row)
+        .update(update)
         .eq("id", values.id);
       if (error) return { ok: false, error: describeDbError(error.message) };
 
@@ -175,12 +196,9 @@ export async function saveProject(input: unknown): Promise<ActionResult> {
       );
 
       revalidatePublic(values.slug);
-      // Si cambio el slug, la URL antigua tambien tiene que dejar de servirse
-      // desde la cache.
-      const previousSlug = (previous as { slug?: unknown } | null)?.slug;
-      if (typeof previousSlug === "string" && previousSlug !== values.slug) {
-        revalidatePublic(previousSlug);
-      }
+      // La URL antigua tiene que dejar de servirse desde la cache para que
+      // empiece a redirigir.
+      if (slugChanged) revalidatePublic(oldSlug);
       return { ok: true, message: "Proyecto actualizado.", id: values.id };
     }
 

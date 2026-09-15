@@ -89,6 +89,7 @@ export function mapProject(row: unknown): Project | null {
       .sort((a, b) => a.position - b.position),
     tags: asStringArray(row.tags),
     seo: mapSeo(row.seo),
+    previousSlugs: asStringArray(row.previous_slugs),
     updatedAt: asString(row.updated_at, new Date(0).toISOString()),
   };
 }

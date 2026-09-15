@@ -2,7 +2,12 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { isLocale } from "@/config/site";
-import { getProjectBySlug, getPublishedProjects } from "@/data/queries";
+import {
+  getProjectByPreviousSlug,
+  getProjectBySlug,
+  getPublishedProjects,
+} from "@/data/queries";
+import { permanentRedirect } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { absoluteUrl, buildPageMetadata } from "@/lib/seo";
 import { ProjectArticle } from "@/components/sections/ProjectArticle";
@@ -55,7 +60,13 @@ export async function generateMetadata({
     params: { slug: project.slug },
     title: project.isConcept ? `${seoTitle} · ${t("conceptBadge")}` : seoTitle,
     description: seoDescription,
-    ogImage: project.seo.ogImage ?? project.coverImage?.url ?? null,
+    // Las redes sociales no muestran SVG: los marcadores locales caen a la
+    // imagen por defecto.
+    ogImage:
+      project.seo.ogImage ??
+      (project.coverImage && !project.coverImage.url.endsWith(".svg")
+        ? project.coverImage.url
+        : null),
     type: "article",
   });
 }
@@ -70,7 +81,18 @@ export default async function ProjectPage({
 
   setRequestLocale(locale);
   const project = await getProjectBySlug(slug);
-  if (!project) notFound();
+  if (!project) {
+    // Un slug antiguo redirige de forma permanente al actual, en lugar de
+    // dar 404 a quien llega desde un enlace o un resultado de Google viejo.
+    const renamed = await getProjectByPreviousSlug(slug);
+    if (renamed) {
+      permanentRedirect({
+        href: { pathname: "/proyectos/[slug]", params: { slug: renamed.slug } },
+        locale,
+      });
+    }
+    notFound();
+  }
 
   const breadcrumb = [
     { name: "AGM", url: absoluteUrl(locale, { pathname: "/" }) },
