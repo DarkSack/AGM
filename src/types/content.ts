@@ -132,6 +132,13 @@ export interface SiteSettings {
     country: string | null;
     openingHours: string[] | null;
   };
+  /**
+   * Aviso de privacidad. Mientras el texto este vacio, la pagina muestra un
+   * aviso provisional y queda fuera del indice de Google.
+   */
+  privacy: {
+    body: Localized;
+  };
   updatedAt: string;
 }
 

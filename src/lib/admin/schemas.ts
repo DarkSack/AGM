@@ -177,6 +177,20 @@ export const settingsSchema = z.object({
     country: z.string().trim().max(120).nullable(),
     openingHours: z.array(z.string().trim().max(80)).max(14).nullable(),
   }),
+  /**
+   * Un aviso de privacidad completo supera con facilidad los 8000 caracteres
+   * del resto de textos; de ahi su limite propio. `default` para que un envio
+   * de una version anterior del panel no falle por no traerlo.
+   */
+  privacy: z
+    .object({
+      body: z.object(
+        Object.fromEntries(
+          LOCALES.map((locale) => [locale, z.string().trim().max(60000).default("")]),
+        ) as Record<(typeof LOCALES)[number], z.ZodDefault<z.ZodString>>,
+      ),
+    })
+    .default({ body: { es: "", en: "" } }),
 });
 
 export type SettingsFormValues = z.infer<typeof settingsSchema>;

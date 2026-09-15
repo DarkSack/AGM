@@ -11,7 +11,7 @@ import { LocalizedField, TextField } from "./fields";
 const emptyLocalized = (): Localized =>
   Object.fromEntries(LOCALES.map((locale) => [locale, ""])) as Localized;
 
-export type SettingsSection = "contenido" | "despacho" | "seo";
+export type SettingsSection = "contenido" | "despacho" | "seo" | "privacidad";
 
 /**
  * Editor de la configuracion del sitio.
@@ -46,6 +46,7 @@ export function SettingsForm({
         values: values.values,
         seo: values.seo,
         contact: values.contact,
+        privacy: values.privacy,
       });
 
       setFeedback(
@@ -73,6 +74,9 @@ export function SettingsForm({
       ) : null}
       {section === "seo" ? (
         <SeoSection values={values} setValues={setValues} />
+      ) : null}
+      {section === "privacidad" ? (
+        <PrivacySection values={values} setValues={setValues} />
       ) : null}
 
       {feedback ? (
@@ -450,6 +454,26 @@ function SeoSection({ values, setValues }: SectionProps) {
           }}
         />
       </div>
+    </Panel>
+  );
+}
+
+function PrivacySection({ values, setValues }: SectionProps) {
+  return (
+    <Panel
+      title="Aviso de privacidad"
+      description="El texto legal que explica qué datos recoge el formulario, para qué se usan y cómo ejercer los derechos ARCO. Debe redactarlo o revisarlo quien asesore legalmente al despacho."
+    >
+      <LocalizedField
+        label="Texto del aviso"
+        value={values.privacy.body}
+        onChange={(body) =>
+          setValues((current) => ({ ...current, privacy: { body } }))
+        }
+        multiline
+        rows={18}
+        hint="Separa los apartados con una línea en blanco. Mientras el español esté vacío, la página muestra un aviso provisional y Google no la indexa. Si falta el inglés, se muestra el español."
+      />
     </Panel>
   );
 }

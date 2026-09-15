@@ -164,6 +164,7 @@ export function mapSettings(data: unknown): SiteSettings {
 
   const seo = isRecord(data.seo) ? data.seo : {};
   const contact = isRecord(data.contact) ? data.contact : {};
+  const privacy = isRecord(data.privacy) ? data.privacy : {};
 
   const method = asArray(data.method)
     .map((item, index) => {
@@ -259,6 +260,13 @@ export function mapSettings(data: unknown): SiteSettings {
         const hours = asStringArray(contact.openingHours);
         return hours.length > 0 ? hours : null;
       })(),
+    },
+    privacy: {
+      // Sin respaldo al texto por defecto: un aviso legal vacio es "pendiente",
+      // no algo que se deba rellenar con contenido inventado.
+      body: isRecord(privacy.body)
+        ? asLocalized(privacy.body)
+        : defaultSettings.privacy.body,
     },
     updatedAt: asString(data.updatedAt, defaultSettings.updatedAt),
   };

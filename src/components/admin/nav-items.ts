@@ -11,6 +11,7 @@ export const ADMIN_NAV = [
   { href: "/admin/bloques", label: "Composición" },
   { href: "/admin/despacho", label: "Despacho" },
   { href: "/admin/seo", label: "SEO" },
+  { href: "/admin/privacidad", label: "Privacidad" },
 ] as const;
 
 export type AdminNavItem = (typeof ADMIN_NAV)[number];

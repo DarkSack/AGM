@@ -108,6 +108,7 @@
     "message": "Message",
     "messagePlaceholder": "Tell us what you need, where the property is and the timeline you have in mind.",
     "submit": "Request a quote",
+    "consent": "By sending this form you accept our <link>privacy policy</link>.",
     "submitting": "Sending…",
     "required": "required",
     "successTitle": "Message sent",
@@ -149,8 +150,9 @@
   },
   "privacy": {
     "title": "Privacy policy",
-    "placeholderNotice": "Document pending. This text is a placeholder and must be replaced with the practice's actual privacy policy before the site goes live.",
-    "body": "AGM Diseño y Proyección collects the data you submit through the contact form for the sole purpose of responding to your enquiry. The final wording of this notice, including the data controller, purposes, transfers and how to exercise your rights, will be drafted by the practice."
+    "placeholderNotice": "We are updating our full privacy policy. If you have any question about how we use your data, write to us at <email></email>.",
+    "body": "AGM Diseño y Proyección collects the data you submit through the contact form for the sole purpose of responding to your enquiry. We do not share it with third parties or use it for advertising.",
+    "updated": "Last updated: {date}"
   },
   "notFound": {
     "title": "Page not found",

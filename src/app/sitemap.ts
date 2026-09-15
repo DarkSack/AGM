@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { LOCALES } from "@/config/site";
-import { getPublishedProjects } from "@/data/queries";
+import { getPublishedProjects, getSettings } from "@/data/queries";
+import { privacyText } from "@/lib/privacy";
 import { HREFLANG, absoluteUrl } from "@/lib/seo";
 import type { AppPathnames } from "@/i18n/routing";
 
@@ -12,13 +13,15 @@ import type { AppPathnames } from "@/i18n/routing";
  * inglesa como entrada propia duplicaria las URL y es justo lo que Google pide
  * evitar en un sitio multiidioma.
  *
- * El aviso de privacidad queda fuera a proposito: sigue siendo un marcador y
- * esta marcado como `noindex`.
+ * El aviso de privacidad solo se incluye cuando tiene su texto definitivo.
  */
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const projects = await getPublishedProjects();
+  const [projects, settings] = await Promise.all([
+    getPublishedProjects(),
+    getSettings(),
+  ]);
 
   const entry = (
     pathname: AppPathnames,
@@ -65,5 +68,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ),
   );
 
-  return [home, ...projectPages];
+  // El aviso de privacidad entra solo cuando el despacho ha escrito el texto
+  // real; el provisional va con `noindex`.
+  const privacy = privacyText(settings, "es")
+    ? [entry("/aviso-de-privacidad", undefined, new Date(settings.updatedAt), 0.2)]
+    : [];
+
+  return [home, ...projectPages, ...privacy];
 }

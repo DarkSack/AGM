@@ -11,6 +11,7 @@ import {
   fieldErrors,
   type ContactInput,
 } from "@/lib/validation";
+import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 
 type Status =
@@ -214,6 +215,21 @@ export function ContactForm({ locale }: { locale: Locale }) {
           <Button type="submit" size="lg" className="w-full sm:w-auto">
             {isSubmitting ? t("submitting") : t("submit")}
           </Button>
+
+          {/* Informar del aviso antes de recoger datos personales es lo que
+              pide la ley mexicana de proteccion de datos. */}
+          <p className="font-sans text-xs leading-relaxed text-fg-subtle">
+            {t.rich("consent", {
+              link: (chunks) => (
+                <Link
+                  href="/aviso-de-privacidad"
+                  className="text-fg-muted underline underline-offset-4 transition-colors hover:text-fg"
+                >
+                  {chunks}
+                </Link>
+              ),
+            })}
+          </p>
 
           {/* Region viva permanente: si apareciera solo al fallar, algunos
               lectores de pantalla no llegarian a anunciarla. */}

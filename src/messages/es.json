@@ -108,6 +108,7 @@
     "message": "Mensaje",
     "messagePlaceholder": "Cuéntanos qué necesitas, dónde se ubica el inmueble y en qué plazos piensas.",
     "submit": "Solicitar cotización",
+    "consent": "Al enviar el formulario aceptas nuestro <link>aviso de privacidad</link>.",
     "submitting": "Enviando…",
     "required": "obligatorio",
     "successTitle": "Mensaje enviado",
@@ -149,8 +150,9 @@
   },
   "privacy": {
     "title": "Aviso de privacidad",
-    "placeholderNotice": "Documento pendiente. Este texto es un marcador de posición: debe sustituirse por el aviso de privacidad real del despacho antes de publicar el sitio.",
-    "body": "AGM Diseño y Proyección recaba los datos que envías a través del formulario de contacto con la única finalidad de responder a tu solicitud. El contenido definitivo de este aviso, incluyendo responsable del tratamiento, finalidades, transferencias y medios para ejercer derechos ARCO, será redactado por el despacho."
+    "placeholderNotice": "Estamos actualizando nuestro aviso de privacidad completo. Si tienes cualquier duda sobre el uso de tus datos, escríbenos a <email></email>.",
+    "body": "AGM Diseño y Proyección recaba los datos que envías a través del formulario de contacto con la única finalidad de responder a tu solicitud. No los compartimos con terceros ni los usamos con fines publicitarios.",
+    "updated": "Última actualización: {date}"
   },
   "notFound": {
     "title": "Página no encontrada",

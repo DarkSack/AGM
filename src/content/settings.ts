@@ -214,5 +214,11 @@ export const defaultSettings: SiteSettings = {
     openingHours: null,
   },
 
+  // Vacio a proposito: el aviso de privacidad lo redacta el despacho. No se
+  // publica un texto legal inventado.
+  privacy: {
+    body: { es: "", en: "" },
+  },
+
   updatedAt: "2026-01-01T00:00:00.000Z",
 };
