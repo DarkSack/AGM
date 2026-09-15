@@ -4,6 +4,9 @@ import { revalidatePath } from "next/cache";
 import { redirect, unstable_rethrow } from "next/navigation";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import { defaultBlocks } from "@/content/blocks";
+import { defaultServices } from "@/content/services";
+import { defaultSettings } from "@/content/settings";
 import { removedStoragePaths, storagePathsIn } from "@/lib/storage";
 import { STORAGE_BUCKET } from "@/lib/supabase/config";
 import { requireStaff } from "./auth";
@@ -464,6 +467,87 @@ export async function deleteMessage(id: string): Promise<ActionResult> {
     return { ok: true, message: "Mensaje eliminado." };
   } catch (error) {
     return fail(error, "No se pudo eliminar el mensaje.");
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Contenido inicial
+ * ------------------------------------------------------------------ */
+
+/**
+ * Copia a la base de datos el contenido que trae el codigo (textos, servicios y
+ * composicion de la portada), para que el despacho lo edite en vez de
+ * reescribirlo desde cero.
+ *
+ * Solo rellena lo que falta: una tabla con datos no se toca, asi que pulsarlo
+ * por error o dos veces no borra nada. Los proyectos de muestra no se cargan:
+ * son conceptuales y no deben mezclarse con la obra real.
+ */
+export async function seedDefaultContent(): Promise<ActionResult> {
+  try {
+    const { supabase, userId } = await requireStaff();
+
+    const [settingsRow, services, blocks] = await Promise.all([
+      supabase.from("site_settings").select("id").eq("id", 1).maybeSingle(),
+      supabase.from("services").select("id", { count: "exact", head: true }),
+      supabase.from("content_blocks").select("id", { count: "exact", head: true }),
+    ]);
+    const readError = settingsRow.error ?? services.error ?? blocks.error;
+    if (readError) return { ok: false, error: describeDbError(readError.message) };
+
+    const loaded: string[] = [];
+
+    if (!settingsRow.data) {
+      // Se valida con el mismo esquema que el panel: lo sembrado tiene que poder
+      // guardarse despues sin errores.
+      const { error } = await supabase.from("site_settings").upsert({
+        id: 1,
+        // zod descarta `updatedAt`, que no forma parte del esquema.
+        data: settingsSchema.parse(defaultSettings),
+        updated_by: userId,
+      });
+      if (error) return { ok: false, error: describeDbError(error.message) };
+      loaded.push("textos del sitio");
+    }
+
+    if ((services.count ?? 0) === 0) {
+      const { error } = await supabase.from("services").insert(
+        defaultServices.map((service, position) =>
+          serviceSchema.omit({ id: true }).parse({
+            slug: service.slug,
+            title: service.title,
+            description: service.description,
+            icon: service.icon,
+            position,
+            active: service.active,
+          }),
+        ),
+      );
+      if (error) return { ok: false, error: describeDbError(error.message) };
+      loaded.push("servicios");
+    }
+
+    if ((blocks.count ?? 0) === 0) {
+      const { error } = await supabase.rpc("replace_content_blocks", {
+        blocks: defaultBlocks.map((block) => ({
+          type: block.type,
+          enabled: block.enabled,
+          data: block.data,
+        })),
+      });
+      if (error) return { ok: false, error: describeDbError(error.message) };
+      loaded.push("composición de la portada");
+    }
+
+    if (loaded.length === 0) {
+      return { ok: true, message: "Ya estaba todo cargado; no se ha cambiado nada." };
+    }
+
+    revalidatePublic();
+    revalidatePath("/admin", "layout");
+    return { ok: true, message: `Cargado: ${loaded.join(", ")}.` };
+  } catch (error) {
+    return fail(error, "No se pudo cargar el contenido inicial.");
   }
 }
 

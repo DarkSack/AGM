@@ -121,6 +121,12 @@ export interface DashboardStats {
   messagesTotal: number;
   messagesUnread: number;
   lastUpdate: string | null;
+  /** Lo que todavia no existe en la base de datos y sale del codigo. */
+  missingContent: {
+    settings: boolean;
+    services: boolean;
+    blocks: boolean;
+  };
 }
 
 /**
@@ -156,6 +162,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     servicesActive,
     messagesTotal,
     messagesUnread,
+    blocksTotal,
   ] = await Promise.all([
     countOf("projects"),
     countOf("projects", { column: "status", value: "published" }),
@@ -165,6 +172,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     countOf("services", { column: "active", value: true }),
     countOf("contact_messages"),
     countOf("contact_messages", { column: "read", value: false }),
+    countOf("content_blocks"),
   ]);
 
   // La ultima actualizacion del sitio es la mas reciente entre contenido y
@@ -198,5 +206,10 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     messagesTotal,
     messagesUnread,
     lastUpdate,
+    missingContent: {
+      settings: !lastSettings,
+      services: servicesTotal === 0,
+      blocks: blocksTotal === 0,
+    },
   };
 }

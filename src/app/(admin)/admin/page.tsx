@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { MediaCleanupButton } from "@/components/admin/MediaCleanupButton";
+import { SeedContentButton } from "@/components/admin/SeedContentButton";
 import { requireStaff } from "@/lib/admin/auth";
 import { getDashboardStats } from "@/lib/admin/queries";
 
@@ -15,6 +16,12 @@ export default async function DashboardPage() {
     requireStaff(),
     getDashboardStats(),
   ]);
+
+  const missing = [
+    stats.missingContent.settings ? "textos" : null,
+    stats.missingContent.services ? "servicios" : null,
+    stats.missingContent.blocks ? "composición de portada" : null,
+  ].filter((item): item is string => item !== null);
 
   const lastUpdate = stats.lastUpdate
     ? new Intl.DateTimeFormat("es-MX", {
@@ -38,6 +45,24 @@ export default async function DashboardPage() {
       }
     >
       <div className="flex flex-col gap-8">
+        {missing.length > 0 ? (
+          <section
+            aria-labelledby="contenido-inicial"
+            className="rounded-[4px] border border-accent bg-bg p-5"
+          >
+            <h2 id="contenido-inicial" className="text-sm font-semibold text-fg">
+              El sitio todavía muestra el contenido de ejemplo
+            </h2>
+            <p className="mt-1.5 mb-4 max-w-[70ch] text-sm leading-relaxed text-fg-muted">
+              Aún no hay {missing.join(", ")} guardados en la base de datos, así
+              que el panel aparece vacío en esas secciones. Cárgalos para
+              editarlos en lugar de escribirlos desde cero. Solo se rellena lo
+              que falta; no se borra nada ni se añaden los proyectos de muestra.
+            </p>
+            <SeedContentButton />
+          </section>
+        ) : null}
+
         <section aria-labelledby="cifras">
           <h2 id="cifras" className="sr-only">
             Cifras del sitio

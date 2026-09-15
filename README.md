@@ -116,7 +116,7 @@ Ya puedes entrar en `/admin`.
 
 | Sección | Qué permite |
 |---|---|
-| **Inicio** | Cifras del sitio, última actualización y limpieza de imágenes sin uso. |
+| **Inicio** | Cifras del sitio, última actualización, limpieza de imágenes sin uso y, mientras la base de datos esté vacía, un botón para cargar el contenido inicial (textos, servicios y composición) y editarlo en lugar de escribirlo desde cero. |
 | **Proyectos** | Alta, edición y borrado. Publicar y despublicar desde el propio listado. Galería con subida múltiple, reordenación, portada y texto alternativo por imagen e idioma. Vista previa de borradores. Cambiar el slug de un proyecto publicado deja la URL antigua redirigiendo a la nueva. |
 | **Mensajes** | Solicitudes recibidas por el formulario, con marcado de leído. |
 | **Servicios** | Crear, reordenar, activar/desactivar, cambiar icono y textos. |
@@ -124,6 +124,7 @@ Ya puedes entrar en `/admin`.
 | **Composición** | Qué bloques aparecen en la portada y en qué orden. |
 | **Despacho** | Teléfono, correo, redes, dirección y horarios. |
 | **SEO** | Título, descripción, palabras clave e imagen social, en los dos idiomas. |
+| **Privacidad** | Texto del aviso de privacidad. Mientras esté vacío, la página muestra un aviso provisional y queda en `noindex`; al escribirlo se publica, se indexa y entra en el sitemap. |
 
 Todo con los dos idiomas a la vista en cada campo, y un punto que indica si el
 inglés ya está escrito: el fallo típico de un CMS bilingüe es publicar con la
@@ -230,8 +231,8 @@ Zapopan, con `verified: true` y coordenadas) y la página de Facebook.
 
 1. **Aviso de privacidad.** Es lo más urgente: el formulario recoge nombre,
    correo y teléfono, y la ley mexicana de protección de datos exige un aviso
-   real. El texto actual es un marcador y la página está en `noindex` hasta que
-   se redacte.
+   real. Se pega desde **Panel → Privacidad**; hasta entonces la página muestra
+   un texto provisional y está en `noindex`. El formulario ya enlaza al aviso.
 2. **Datos del arquitecto:** nombre, titulación y cédula. Mientras sean
    marcadores, la ficha lateral de «Sobre AGM» no se muestra.
 3. **Fotografías reales.** Los proyectos actuales son propuestas conceptuales
@@ -257,6 +258,11 @@ Recomendado en **Vercel**, que es donde Next se despliega sin configuración.
      `NEXT_PUBLIC_GA_MEASUREMENT_ID` (GA4 directo), no las dos.
    - `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` cuando se verifique en Search
      Console.
+   - `RESEND_API_KEY` para recibir por correo cada solicitud del formulario
+     (con `CONTACT_NOTIFY_TO` y `CONTACT_NOTIFY_FROM` opcionales, ver
+     `.env.example`). Es de servidor: **sin** prefijo `NEXT_PUBLIC_`. El correo
+     llega con "Responder a" apuntando al visitante. Si la base de datos falla al
+     guardar, el correo es la vía de respaldo y el mensaje no se pierde.
 3. Deploy. HTTPS y CDN vienen configurados.
 4. En Search Console, da de alta el dominio y envía `/sitemap.xml`.
 5. En Supabase → **Authentication → URL Configuration**, añade el dominio en
