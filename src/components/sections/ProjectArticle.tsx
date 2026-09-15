@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/config/site";
 import { Link } from "@/i18n/navigation";
+import { publicText } from "@/lib/placeholder";
 import { MediaImage } from "@/components/ui/MediaImage";
 import { t as pick, type Project } from "@/types/content";
 
@@ -27,15 +28,17 @@ export async function ProjectArticle({
   const t = await getTranslations({ locale, namespace: "projects" });
   const title = pick(project.title, locale);
 
+  // `publicText` descarta vacios y marcadores pendientes (`[AÑO]`,
+  // `[CIUDAD]`...): una ficha con menos datos es mejor que una con corchetes.
   const meta = [
     { label: t("meta.category"), value: t(`categories.${project.category}`) },
-    { label: t("meta.location"), value: pick(project.location, locale) },
-    { label: t("meta.year"), value: project.year },
+    { label: t("meta.location"), value: publicText(pick(project.location, locale)) },
+    { label: t("meta.year"), value: publicText(project.year) },
     {
       label: t("meta.client"),
-      value: project.client ? pick(project.client, locale) : null,
+      value: project.client ? publicText(pick(project.client, locale)) : null,
     },
-    { label: t("meta.area"), value: project.area },
+    { label: t("meta.area"), value: publicText(project.area) },
   ].filter((item) => Boolean(item.value));
 
   return (
@@ -43,7 +46,8 @@ export async function ProjectArticle({
       <div className="container-editorial">
         {showBackLink ? (
           <Link
-            href="/"
+            // Vuelve a la seccion de proyectos, no al principio de la portada.
+            href={{ pathname: "/", hash: "proyectos" }}
             className="inline-flex items-center gap-2 font-sans text-sm text-fg-muted transition-colors hover:text-fg"
           >
             <span aria-hidden="true">&larr;</span>
@@ -116,7 +120,7 @@ export async function ProjectArticle({
           <div className="lg:col-span-7 lg:col-start-6">
             {project.isConcept ? (
               <p className="mb-8 border-l-2 border-accent py-3 pl-5 text-sm leading-relaxed text-fg-muted">
-                {t("conceptNotice")}
+                {t("conceptNoticeSingle")}
               </p>
             ) : null}
 

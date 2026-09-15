@@ -33,8 +33,7 @@
   "about": {
     "eyebrow": "About AGM",
     "title": "Architecture that answers to how a space is actually lived in",
-    "philosophyLabel": "Our philosophy",
-    "pendingInfo": "Biographical details pending confirmation from the practice."
+    "philosophyLabel": "Our philosophy"
   },
   "services": {
     "eyebrow": "Services",
@@ -48,6 +47,7 @@
     "intro": "A sample of the kind of work we develop and the criteria we bring to every commission.",
     "conceptBadge": "Concept project",
     "conceptNotice": "The projects below are conceptual proposals created to illustrate how the practice works. They do not represent work built by AGM.",
+    "conceptNoticeSingle": "This project is a conceptual proposal created to illustrate how the practice works. It does not represent work built by AGM.",
     "viewDetail": "View project",
     "backToProjects": "Back to projects",
     "empty": "No projects published yet.",

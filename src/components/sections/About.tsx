@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/config/site";
+import { publicText } from "@/lib/placeholder";
 import { Section } from "@/components/ui/Section";
 import { t as pick, type SiteSettings } from "@/types/content";
 
@@ -20,6 +21,8 @@ interface AboutProps {
 export async function About({ settings, locale }: AboutProps) {
   const t = await getTranslations("about");
   const { about } = settings;
+  const architectName = publicText(about.architectName);
+  const role = publicText(pick(about.role, locale));
 
   return (
     <Section id="sobre-agm" labelledBy="sobre-agm-title" tone="alt">
@@ -92,18 +95,19 @@ export async function About({ settings, locale }: AboutProps) {
                 <PortraitPlaceholder />
               )}
 
-              <dl className="mt-8 divide-y divide-line border-y border-line">
-                <div className="flex flex-col gap-1 py-4">
-                  <dt className="eyebrow">{about.architectName}</dt>
-                  <dd className="font-sans text-sm text-fg-muted">
-                    {pick(about.role, locale)}
-                  </dd>
-                </div>
-              </dl>
-
-              <p className="mt-4 font-sans text-xs leading-relaxed text-fg-subtle">
-                {t("pendingInfo")}
-              </p>
+              {/* La ficha solo aparece con datos reales. Mientras el nombre o
+                  el titulo sean marcadores (`[Nombre del Arquitecto]`) no se
+                  publica nada: un visitante no debe ver corchetes. */}
+              {architectName ? (
+                <dl className="mt-8 divide-y divide-line border-y border-line">
+                  <div className="flex flex-col gap-1 py-4">
+                    <dt className="eyebrow">{architectName}</dt>
+                    {role ? (
+                      <dd className="font-sans text-sm text-fg-muted">{role}</dd>
+                    ) : null}
+                  </div>
+                </dl>
+              ) : null}
             </div>
           </div>
         </div>

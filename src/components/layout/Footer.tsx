@@ -4,7 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { ANALYTICS_EVENTS } from "@/lib/analytics";
 import { resolveContact } from "@/lib/contactInfo";
 import { TrackedLink } from "@/components/ui/TrackedLink";
-import type { SiteSettings } from "@/types/content";
+import { t as pick, type SiteSettings } from "@/types/content";
 import { FooterNav } from "./FooterNav";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { Logo } from "./Logo";
@@ -27,7 +27,7 @@ export async function Footer({ settings, locale }: FooterProps) {
           <div className="lg:col-span-4">
             <Logo />
             <p className="mt-6 max-w-[34ch] text-sm leading-relaxed text-fg-muted">
-              {settings.hero.subtitle[locale]}
+              {pick(settings.hero.subtitle, locale)}
             </p>
           </div>
 

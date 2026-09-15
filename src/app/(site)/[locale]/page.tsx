@@ -7,6 +7,7 @@ import { routing } from "@/i18n/routing";
 import { buildPageMetadata } from "@/lib/seo";
 import { BlockRenderer } from "@/components/blocks/BlockRenderer";
 import { OrganizationJsonLd } from "@/components/seo/JsonLd";
+import { t as pick } from "@/types/content";
 
 /**
  * La portada se genera de forma estatica y se revalida cada cinco minutos.
@@ -34,10 +35,14 @@ export async function generateMetadata({
   return buildPageMetadata({
     locale,
     pathname: "/",
-    title: settings.seo.title[locale],
+    // Si falta la traduccion se usa el espanol en lugar de un titulo vacio.
+    title: pick(settings.seo.title, locale),
     absoluteTitle: true,
-    description: settings.seo.description[locale],
-    keywords: settings.seo.keywords[locale],
+    description: pick(settings.seo.description, locale),
+    keywords:
+      settings.seo.keywords[locale].length > 0
+        ? settings.seo.keywords[locale]
+        : settings.seo.keywords.es,
     ogImage: settings.seo.ogImage,
   });
 }

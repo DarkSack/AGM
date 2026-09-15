@@ -33,8 +33,7 @@
   "about": {
     "eyebrow": "Sobre AGM",
     "title": "Arquitectura que responde a cómo se vive el espacio",
-    "philosophyLabel": "Nuestra filosofía",
-    "pendingInfo": "Información biográfica pendiente de confirmar con el despacho."
+    "philosophyLabel": "Nuestra filosofía"
   },
   "services": {
     "eyebrow": "Servicios",
@@ -48,6 +47,7 @@
     "intro": "Una muestra del tipo de trabajo que desarrollamos y de los criterios con los que abordamos cada encargo.",
     "conceptBadge": "Proyecto conceptual",
     "conceptNotice": "Los proyectos que ves a continuación son propuestas conceptuales creadas como muestra del enfoque de trabajo del despacho. No corresponden a obra ejecutada por AGM.",
+    "conceptNoticeSingle": "Este proyecto es una propuesta conceptual creada como muestra del enfoque de trabajo del despacho. No corresponde a obra ejecutada por AGM.",
     "viewDetail": "Ver proyecto",
     "backToProjects": "Volver a proyectos",
     "empty": "Todavía no hay proyectos publicados.",

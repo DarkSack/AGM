@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/config/site";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/cn";
+import { publicText } from "@/lib/placeholder";
 import { MediaImage } from "@/components/ui/MediaImage";
 import { t as pick, type Project } from "@/types/content";
 
@@ -104,8 +105,12 @@ export async function ProjectCard({
 
           <span className="numeral shrink-0 pt-2 text-right">
             {t(`categories.${project.category}`)}
-            <br />
-            {project.year ?? ""}
+            {publicText(project.year) ? (
+              <>
+                <br />
+                {publicText(project.year)}
+              </>
+            ) : null}
           </span>
         </div>
       </Link>

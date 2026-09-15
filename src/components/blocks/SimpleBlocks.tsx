@@ -34,6 +34,25 @@ function safeHref(href: string): string {
 
 type BlockOf<T extends ContentBlock["type"]> = Extract<ContentBlock, { type: T }>;
 
+/**
+ * El `data` de cada bloque llega de un jsonb que no valida la forma (ver
+ * `mapContentBlock`). Estas guardas son esa validacion: un bloque guardado a
+ * medias —una imagen sin subir, una cita sin texto— no se pinta, en lugar de
+ * dejar un hueco vacio o romper el render de la portada.
+ */
+function textOf(value: unknown, locale: Locale): string {
+  if (typeof value !== "object" || value === null) return "";
+  const localized = value as Partial<Record<Locale, unknown>>;
+  const text = localized[locale];
+  const fallback = localized.es;
+  if (typeof text === "string" && text.trim()) return text;
+  return typeof fallback === "string" ? fallback.trim() : "";
+}
+
+function urlOf(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
 export function TextBlock({
   block,
   locale,
@@ -41,21 +60,27 @@ export function TextBlock({
   block: BlockOf<"text">;
   locale: Locale;
 }) {
+  const heading = textOf(block.data.heading, locale);
+  const body = textOf(block.data.body, locale);
+  if (!heading && !body) return null;
+
   return (
     <div className="section-y">
       <div className="container-editorial">
         <div className="max-w-[68ch]">
-          {block.data.heading ? (
+          {heading ? (
             <h2 className="text-h2 text-fg" data-reveal>
-              {pick(block.data.heading, locale)}
+              {heading}
             </h2>
           ) : null}
-          <p
-            className="mt-6 text-lead whitespace-pre-line text-fg-muted"
-            data-reveal
-          >
-            {pick(block.data.body, locale)}
-          </p>
+          {body ? (
+            <p
+              className="mt-6 text-lead whitespace-pre-line text-fg-muted"
+              data-reveal
+            >
+              {body}
+            </p>
+          ) : null}
         </div>
       </div>
     </div>
@@ -69,13 +94,14 @@ export function QuoteBlock({
   block: BlockOf<"quote">;
   locale: Locale;
 }) {
+  const text = textOf(block.data.text, locale);
+  if (!text) return null;
+
   return (
     <div className="section-y">
       <div className="container-editorial">
         <figure className="mx-auto max-w-[44ch] text-center" data-reveal>
-          <blockquote className="font-display text-h2 text-fg">
-            {pick(block.data.text, locale)}
-          </blockquote>
+          <blockquote className="font-display text-h2 text-fg">{text}</blockquote>
           {block.data.author ? (
             <figcaption className="eyebrow mt-6">{block.data.author}</figcaption>
           ) : null}
@@ -92,7 +118,9 @@ export function StatsBlock({
   block: BlockOf<"stats">;
   locale: Locale;
 }) {
-  const items = block.data.items ?? [];
+  const items = (Array.isArray(block.data.items) ? block.data.items : []).filter(
+    (item) => typeof item?.value === "string" && item.value.trim().length > 0,
+  );
   if (items.length === 0) return null;
 
   return (
@@ -108,7 +136,7 @@ export function StatsBlock({
                 { "--reveal-delay": `${index * 60}ms` } as React.CSSProperties
               }
             >
-              <dt className="eyebrow order-2 mt-3">{pick(item.label, locale)}</dt>
+              <dt className="eyebrow order-2 mt-3">{textOf(item.label, locale)}</dt>
               <dd className="order-1 font-display text-h1 text-fg">{item.value}</dd>
             </div>
           ))}
@@ -125,22 +153,27 @@ export function ImageBlock({
   block: BlockOf<"image">;
   locale: Locale;
 }) {
+  // Sin imagen subida, `next/image` falla con `src` vacio.
+  const url = urlOf(block.data.url);
+  if (!url) return null;
+  const caption = textOf(block.data.caption, locale);
+
   return (
     <div className="section-y">
       <div className="container-editorial">
         <figure data-reveal>
           <div className="aspect-16/9 w-full overflow-hidden bg-bg-alt">
             <MediaImage
-              src={block.data.url}
-              alt={pick(block.data.alt, locale)}
+              src={url}
+              alt={textOf(block.data.alt, locale)}
               width={1920}
               height={1080}
               sizes="(max-width: 1440px) 100vw, 1440px"
             />
           </div>
-          {block.data.caption ? (
+          {caption ? (
             <figcaption className="mt-4 font-sans text-xs text-fg-subtle">
-              {pick(block.data.caption, locale)}
+              {caption}
             </figcaption>
           ) : null}
         </figure>
@@ -156,7 +189,9 @@ export function ImageGridBlock({
   block: BlockOf<"imageGrid">;
   locale: Locale;
 }) {
-  const images = block.data.images ?? [];
+  const images = (Array.isArray(block.data.images) ? block.data.images : []).filter(
+    (image) => urlOf(image?.url).length > 0,
+  );
   if (images.length === 0) return null;
 
   return (
@@ -175,8 +210,8 @@ export function ImageGridBlock({
               }
             >
               <MediaImage
-                src={image.url}
-                alt={pick(image.alt, locale)}
+                src={urlOf(image.url)}
+                alt={textOf(image.alt, locale)}
                 width={1200}
                 height={900}
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -196,25 +231,27 @@ export function CtaBlock({
   block: BlockOf<"cta">;
   locale: Locale;
 }) {
+  const heading = textOf(block.data.heading, locale);
+  const body = textOf(block.data.body, locale);
+  const label = textOf(block.data.label, locale);
+  // Un boton sin texto o una llamada sin titulo no llaman a nada.
+  if (!heading || !label) return null;
+
   return (
     <div className="section-y bg-bg-alt">
       <div className="container-editorial">
         <div className="flex flex-col items-start gap-8 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-[38ch]" data-reveal>
-            <h2 className="text-h2 text-fg">{pick(block.data.heading, locale)}</h2>
-            {block.data.body ? (
-              <p className="mt-4 text-lead text-fg-muted">
-                {pick(block.data.body, locale)}
-              </p>
-            ) : null}
+            <h2 className="text-h2 text-fg">{heading}</h2>
+            {body ? <p className="mt-4 text-lead text-fg-muted">{body}</p> : null}
           </div>
 
           <a
-            href={safeHref(block.data.href)}
+            href={safeHref(urlOf(block.data.href) || "#contacto")}
             className={buttonClasses("solid", "lg", "group shrink-0")}
             data-reveal
           >
-            {pick(block.data.label, locale)}
+            {label}
             <ArrowRight />
           </a>
         </div>

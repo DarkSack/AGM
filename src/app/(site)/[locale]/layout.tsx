@@ -13,6 +13,7 @@ import { ThemeKeeper } from "@/components/layout/ThemeKeeper";
 import { ThemeScript } from "@/components/layout/ThemeScript";
 import { RevealObserver } from "@/components/ui/RevealObserver";
 import { resolveContact } from "@/lib/contactInfo";
+import { t as pick } from "@/types/content";
 import "../../globals.css";
 
 export function generateStaticParams() {
@@ -42,11 +43,12 @@ export async function generateMetadata({
   return {
     metadataBase: new URL(siteUrl),
     title: {
-      default: settings.seo.title[locale],
+      // `pick` cae al espanol: un titulo sin traducir no puede quedar vacio.
+      default: pick(settings.seo.title, locale),
       // Las paginas internas anaden su propio titulo delante del nombre.
       template: `%s · AGM Diseño y Proyección`,
     },
-    description: settings.seo.description[locale],
+    description: pick(settings.seo.description, locale),
     applicationName: "AGM Diseño y Proyección",
     authors: [{ name: "AGM Diseño y Proyección" }],
     creator: "AGM Diseño y Proyección",
