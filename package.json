@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "description": "Sitio web y CMS de AGM Diseno y Proyeccion",
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "scripts": {
     "dev": "next dev",
     "dev:webpack": "next dev --webpack",

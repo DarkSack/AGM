@@ -1,0 +1,54 @@
+# Comprobaciones en cada push y pull request.
+#
+# Vercel ya compila al desplegar, pero no ejecuta el lint ni los tests: un
+# cambio que los rompe se publicaria igual. Esto lo detecta antes, y en los
+# pull requests aparece como un check.
+#
+# El build corre sin variables de Supabase a proposito: el sitio tiene que
+# compilar con el contenido por defecto, que es lo que garantiza que un fallo
+# del backend nunca tumba un despliegue.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Typecheck, lint, tests y build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
