@@ -96,19 +96,75 @@ export async function listAllBlocks(): Promise<ContentBlock[]> {
   return blocks.length > 0 ? blocks : defaultBlocks;
 }
 
-export async function listMessages(limit = 100): Promise<ContactMessage[]> {
+export const MESSAGES_PAGE_SIZE = 50;
+
+export interface MessagesPage {
+  messages: ContactMessage[];
+  page: number;
+  pageCount: number;
+  total: number;
+  unread: number;
+}
+
+/**
+ * Una pagina de mensajes, del mas reciente al mas antiguo.
+ *
+ * Antes se pedian los 100 ultimos sin mas: el mensaje 101 existia en la base de
+ * datos y contaba en el inicio, pero no habia forma de verlo.
+ */
+export async function listMessages(page = 1): Promise<MessagesPage> {
   const { supabase } = await requireStaff();
-  const { data, error } = await supabase
-    .from("contact_messages")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(limit);
+  const current = Number.isInteger(page) && page > 0 ? page : 1;
+  const from = (current - 1) * MESSAGES_PAGE_SIZE;
+
+  const [{ data, error, count }, unread] = await Promise.all([
+    supabase
+      .from("contact_messages")
+      .select("*", { count: "exact" })
+      .order("created_at", { ascending: false })
+      .range(from, from + MESSAGES_PAGE_SIZE - 1),
+    supabase
+      .from("contact_messages")
+      .select("id", { count: "exact", head: true })
+      .eq("read", false),
+  ]);
 
   if (error) throw new Error(`No se pudieron cargar los mensajes: ${error.message}`);
 
-  return (data ?? [])
-    .map(mapContactMessage)
-    .filter((message): message is ContactMessage => message !== null);
+  const total = count ?? 0;
+  return {
+    messages: (data ?? [])
+      .map(mapContactMessage)
+      .filter((message): message is ContactMessage => message !== null),
+    page: current,
+    pageCount: Math.max(1, Math.ceil(total / MESSAGES_PAGE_SIZE)),
+    total,
+    unread: unread.count ?? 0,
+  };
+}
+
+/** Todos los mensajes, para exportar. Se piden por tandas de 1000. */
+export async function listAllMessages(): Promise<ContactMessage[]> {
+  const { supabase } = await requireStaff();
+  const batch = 1000;
+  const all: ContactMessage[] = [];
+
+  for (let from = 0; ; from += batch) {
+    const { data, error } = await supabase
+      .from("contact_messages")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .range(from, from + batch - 1);
+    if (error) throw new Error(`No se pudieron exportar los mensajes: ${error.message}`);
+
+    for (const row of data ?? []) {
+      const message = mapContactMessage(row);
+      if (message) all.push(message);
+    }
+    if (!data || data.length < batch) break;
+  }
+
+  return all;
 }
 
 export interface DashboardStats {
