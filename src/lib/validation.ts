@@ -24,6 +24,17 @@ export const PROJECT_TYPES = [
 
 export type ProjectType = (typeof PROJECT_TYPES)[number];
 
+/** Nombre en espanol de cada tipo, para el panel y el correo de aviso. */
+export const PROJECT_TYPE_LABELS: Record<ProjectType, string> = {
+  "architectural-design": "Diseño arquitectónico",
+  remodeling: "Remodelación",
+  construction: "Construcción",
+  maintenance: "Mantenimiento",
+  "executive-project": "Proyecto ejecutivo",
+  consulting: "Consultoría",
+  other: "Otro",
+};
+
 /** Digitos, espacios, guiones, puntos y parentesis; opcionalmente con `+`. */
 const PHONE_PATTERN = /^\+?[\d\s().-]{7,25}$/;
 

@@ -4,17 +4,8 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { deleteMessage, setMessageRead } from "@/lib/admin/actions";
 import { cn } from "@/lib/cn";
+import { PROJECT_TYPE_LABELS } from "@/lib/validation";
 import type { ContactMessage } from "@/types/content";
-
-const PROJECT_TYPE_LABELS: Record<string, string> = {
-  "architectural-design": "Diseño arquitectónico",
-  remodeling: "Remodelación",
-  construction: "Construcción",
-  maintenance: "Mantenimiento",
-  "executive-project": "Proyecto ejecutivo",
-  consulting: "Consultoría",
-  other: "Otro",
-};
 
 const dateFormat = new Intl.DateTimeFormat("es-MX", {
   dateStyle: "medium",
@@ -90,7 +81,8 @@ export function MessagesList({ messages }: { messages: ContactMessage[] }) {
 
               <span className="text-sm font-medium text-fg">{message.name}</span>
               <span className="text-xs text-fg-muted">
-                {PROJECT_TYPE_LABELS[message.projectType] ?? message.projectType}
+                {(PROJECT_TYPE_LABELS as Record<string, string>)[message.projectType] ??
+                  message.projectType}
               </span>
               <span className="ml-auto text-xs text-fg-subtle">
                 {dateFormat.format(new Date(message.createdAt))}

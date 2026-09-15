@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
+import { notifyConfig, sendContactNotification } from "@/lib/notify";
 import { contactSchema, fieldErrors } from "@/lib/validation";
 import { getPublicSupabase } from "@/lib/supabase/public";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -72,43 +73,48 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!isSupabaseConfigured) {
-    // Todavia no hay donde guardar el mensaje. Se dice claramente en lugar de
-    // fingir un envio correcto: el visitante debe saber que tiene que usar
-    // WhatsApp o el correo.
-    return NextResponse.json(
-      { ok: false, code: "not_configured" },
-      { status: 503 },
-    );
-  }
+  const supabase = isSupabaseConfigured ? getPublicSupabase() : null;
 
-  const supabase = getPublicSupabase();
-  if (!supabase) {
-    return NextResponse.json({ ok: false, code: "not_configured" }, { status: 503 });
-  }
+  if (supabase) {
+    const { error } = await supabase.from("contact_messages").insert({
+      name: data.name,
+      email: data.email,
+      phone: data.phone || null,
+      project_type: data.projectType,
+      message: data.message,
+      locale: data.locale,
+    });
 
-  const { error } = await supabase.from("contact_messages").insert({
-    name: data.name,
-    email: data.email,
-    phone: data.phone || null,
-    project_type: data.projectType,
-    message: data.message,
-    locale: data.locale,
-  });
+    // El trigger `limit_contact_messages` de la base de datos tiene la ultima
+    // palabra sobre el ritmo de envios, incluso entre instancias.
+    if (error?.message.includes("contact_rate_limited")) {
+      return NextResponse.json(
+        { ok: false, code: "rate_limited" },
+        { status: 429, headers: { "Retry-After": "600" } },
+      );
+    }
 
-  // El trigger `limit_contact_messages` de la base de datos tiene la ultima
-  // palabra sobre el ritmo de envios, incluso entre instancias.
-  if (error?.message.includes("contact_rate_limited")) {
-    return NextResponse.json(
-      { ok: false, code: "rate_limited" },
-      { status: 429, headers: { "Retry-After": "600" } },
-    );
-  }
+    if (!error) {
+      // El aviso sale despues de responder: el visitante no espera a Resend,
+      // y un fallo del correo no convierte en error un mensaje ya guardado.
+      after(() => sendContactNotification(data));
+      return NextResponse.json({ ok: true });
+    }
 
-  if (error) {
     console.error("[contact] no se pudo guardar el mensaje:", error.message);
-    return NextResponse.json({ ok: false, code: "storage_error" }, { status: 502 });
   }
 
-  return NextResponse.json({ ok: true });
+  // No se pudo guardar (sin backend o con la base de datos caida). Si el
+  // correo esta configurado es la unica via que queda, y se espera a saber si
+  // salio: solo entonces se le dice al visitante que su mensaje llego.
+  if (notifyConfig().enabled) {
+    const sent = await sendContactNotification(data);
+    if (sent.ok) return NextResponse.json({ ok: true });
+  }
+
+  // Ni guardado ni enviado. Se dice claramente en lugar de fingir un envio
+  // correcto: el visitante debe saber que tiene que usar WhatsApp o el correo.
+  return supabase
+    ? NextResponse.json({ ok: false, code: "storage_error" }, { status: 502 })
+    : NextResponse.json({ ok: false, code: "not_configured" }, { status: 503 });
 }
