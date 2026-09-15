@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import { THEME_STORAGE_KEY } from "@/components/layout/ThemeScript";
+import { useIsDarkTheme } from "@/components/layout/useIsDarkTheme";
 
 /**
  * Conmutador de tema del panel.
@@ -11,13 +12,10 @@ import { THEME_STORAGE_KEY } from "@/components/layout/ThemeScript";
  * publico no puede reutilizarse aqui sin arrastrar toda la i18n.
  */
 export function ThemeToggleStandalone() {
-  const [dark, setDark] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setDark(document.documentElement.classList.contains("dark"));
-    setMounted(true);
-  }, []);
+  // null hasta hidratar: no se conoce el tema real.
+  const theme = useIsDarkTheme();
+  const mounted = theme !== null;
+  const dark = theme === true;
 
   const toggle = useCallback(() => {
     const next = !document.documentElement.classList.contains("dark");
@@ -28,7 +26,6 @@ export function ThemeToggleStandalone() {
     } catch {
       // Storage bloqueado: el cambio vale solo para esta sesion.
     }
-    setDark(next);
   }, []);
 
   return (

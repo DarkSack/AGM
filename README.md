@@ -15,7 +15,7 @@ Son dos productos en un mismo proyecto:
 
 | Pieza | Elección | Motivo |
 |---|---|---|
-| Framework | **Next.js 15** (App Router) | El requisito número uno era SEO. Next renderiza en el servidor y genera HTML estático: Google recibe la página completa, no un contenedor vacío que rellena JavaScript. Además su API de metadata cubre canonical, `hreflang`, Open Graph, `sitemap.xml` y `robots.txt` sin librerías extra. Astro habría servido para la parte pública, pero el encargo incluye un panel autenticado con formularios y subida de archivos: con Astro haría falta añadir un framework de islas igualmente. |
+| Framework | **Next.js 16** (App Router) | El requisito número uno era SEO. Next renderiza en el servidor y genera HTML estático: Google recibe la página completa, no un contenedor vacío que rellena JavaScript. Además su API de metadata cubre canonical, `hreflang`, Open Graph, `sitemap.xml` y `robots.txt` sin librerías extra. Astro habría servido para la parte pública, pero el encargo incluye un panel autenticado con formularios y subida de archivos: con Astro haría falta añadir un framework de islas igualmente. |
 | Lenguaje | **TypeScript** en modo estricto | Con `strict`, `noUncheckedIndexedAccess` y `noUnusedLocals`. No hay un solo `any` en el código. |
 | Estilos | **Tailwind CSS v4** | Tokens en CSS nativo (`@theme`), cero CSS-in-JS en tiempo de ejecución. La hoja final solo contiene las utilidades que se usan. |
 | i18n | **next-intl** | Rutas traducidas reales (`/proyectos/x` y `/en/projects/x`), no un parámetro de idioma. El cambio de idioma es navegación del router, sin recargar. |
@@ -138,7 +138,7 @@ traducción a medias sin darse cuenta.
 - **Triple validación** en el formulario público: zod en el navegador, el mismo
   esquema zod en la ruta de API, y `CHECK` en Postgres.
 - **Cada Server Action comprueba la sesión.** Una Server Action es un endpoint
-  POST: el middleware no la cubre, así que la comprobación está junto a la
+  POST: el proxy no la cubre, así que la comprobación está junto a la
   operación.
 - **Sin ejecución de código arbitrario desde el CMS.** Los bloques de contenido
   salen de un catálogo cerrado y cada tipo tiene su componente. No hay ningún

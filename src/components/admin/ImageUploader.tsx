@@ -127,10 +127,8 @@ export function ImageUploader({
     [folder, images, onChange],
   );
 
-  const { itemRef, dragState } = useDragReorder(images.length, (f, t) =>
-    reorder(f, t),
-  );
-
+  // `reorder` se declara antes de pasarlo al hook: usar una constante antes de
+  // su declaracion funcionaba solo porque el callback se invoca mas tarde.
   const reorder = (from: number, to: number) => {
     const next = [...images];
     const [item] = next.splice(from, 1);
@@ -138,6 +136,8 @@ export function ImageUploader({
     next.splice(to, 0, item);
     onChange(next.map((image, position) => ({ ...image, position })));
   };
+
+  const { itemRef, dragState } = useDragReorder(images.length, reorder);
 
   const move = (index: number, delta: number) => {
     const target = index + delta;

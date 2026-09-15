@@ -16,7 +16,7 @@ type CookieToSet = { name: string; value: string; options: CookieOptions };
  * Esto es una barrera de conveniencia para no renderizar el panel a un
  * visitante anonimo. La autorizacion real vive en las politicas RLS de la base
  * de datos y en la comprobacion que hace cada pagina y cada Server Action del
- * panel: el middleware por si solo nunca es suficiente.
+ * panel: el proxy por si solo nunca es suficiente.
  */
 async function handleAdmin(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl;
@@ -81,7 +81,12 @@ async function handleAdmin(request: NextRequest): Promise<NextResponse> {
   return response;
 }
 
-export async function middleware(request: NextRequest) {
+/**
+ * En Next 16 el antiguo `middleware.ts` se llama `proxy.ts` y la funcion
+ * exportada `proxy`. Hace lo mismo: corre antes de cada peticion que casa con
+ * `config.matcher`.
+ */
+export async function proxy(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith("/admin")) {
     return handleAdmin(request);
   }
@@ -91,7 +96,7 @@ export async function middleware(request: NextRequest) {
 export const config = {
   /**
    * Excluye rutas de API, assets de Next y cualquier fichero con extension.
-   * Asi el middleware no se ejecuta para imagenes, fuentes ni el sitemap.
+   * Asi el proxy no se ejecuta para imagenes, fuentes ni el sitemap.
    */
   matcher: ["/((?!api|_next/static|_next/image|.*\\..*).*)"],
 };

@@ -32,7 +32,7 @@ export async function createSupabaseServerClient() {
           }
         } catch {
           // Los Server Components no pueden escribir cookies. La renovacion de
-          // sesion la hace el middleware, asi que ignorar aqui es correcto.
+          // sesion la hace el proxy, asi que ignorar aqui es correcto.
         }
       },
     },

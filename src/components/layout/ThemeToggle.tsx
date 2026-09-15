@@ -1,16 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
 import { THEME_STORAGE_KEY } from "./ThemeScript";
+import { useIsDarkTheme } from "./useIsDarkTheme";
 
 type Resolved = "light" | "dark";
-
-function readResolved(): Resolved {
-  if (typeof document === "undefined") return "light";
-  return document.documentElement.classList.contains("dark") ? "dark" : "light";
-}
 
 /**
  * Alterna claro/oscuro y recuerda la eleccion.
@@ -20,19 +16,18 @@ function readResolved(): Resolved {
  */
 export function ThemeToggle({ className = "" }: { className?: string }) {
   const t = useTranslations("theme");
-  const [theme, setTheme] = useState<Resolved>("light");
-  const [mounted, setMounted] = useState(false);
+  // null hasta hidratar: no se conoce el tema real.
+  const dark = useIsDarkTheme();
+  const mounted = dark !== null;
+  const isDark = dark === true;
 
   useEffect(() => {
-    setTheme(readResolved());
-    setMounted(true);
-
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     const onSystemChange = (event: MediaQueryListEvent) => {
       // Solo se sigue al sistema si el visitante no ha elegido explicitamente.
+      // El icono se entera solo: `useIsDarkTheme` observa la clase.
       if (document.documentElement.dataset.themeSource !== "system") return;
       document.documentElement.classList.toggle("dark", event.matches);
-      setTheme(event.matches ? "dark" : "light");
     };
 
     media.addEventListener("change", onSystemChange);
@@ -40,8 +35,8 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
   }, []);
 
   const toggle = useCallback(() => {
-    const next: Resolved = readResolved() === "dark" ? "light" : "dark";
     const root = document.documentElement;
+    const next: Resolved = root.classList.contains("dark") ? "light" : "dark";
     root.classList.toggle("dark", next === "dark");
     root.dataset.themeSource = "user";
     try {
@@ -49,11 +44,8 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
     } catch {
       // Storage bloqueado: el cambio vale para esta sesion y no se persiste.
     }
-    setTheme(next);
     track(ANALYTICS_EVENTS.themeChange, { value: next });
   }, []);
-
-  const isDark = theme === "dark";
 
   return (
     <button

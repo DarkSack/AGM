@@ -6,7 +6,7 @@ import { siteUrl } from "@/config/site";
  *
  * El panel y la API quedan fuera del rastreo: no aportan nada al indice y no
  * tiene sentido gastar presupuesto de rastreo en ellos. No es una medida de
- * seguridad —de eso se ocupan el middleware y las politicas RLS—, solo de
+ * seguridad —de eso se ocupan el proxy y las politicas RLS—, solo de
  * higiene de indexacion.
  */
 export default function robots(): MetadataRoute.Robots {
