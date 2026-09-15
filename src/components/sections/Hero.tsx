@@ -58,11 +58,10 @@ export async function Hero({ settings, locale }: HeroProps) {
             {pick(hero.eyebrow, locale)}
           </p>
 
-          <h1
-            className="mt-7 text-display text-fg"
-            data-reveal
-            style={{ "--reveal-delay": "80ms" } as React.CSSProperties}
-          >
+          {/* Sin `data-reveal` a proposito: el titular es el LCP, y la animacion
+              lo dejaba con opacidad 0 hasta que hidrataba el JavaScript. En un
+              movil lento eso retrasaba el LCP y mostraba una portada vacia. */}
+          <h1 className="mt-7 text-display text-fg">
             {pick(hero.title, locale)}
           </h1>
 

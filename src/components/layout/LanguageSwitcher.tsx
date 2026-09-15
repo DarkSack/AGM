@@ -56,8 +56,10 @@ export function LanguageSwitcher({ className }: { className?: string }) {
               disabled={isPending}
               aria-current={isActive ? "true" : undefined}
               aria-label={t("switchTo", { language: t(code) })}
+              // 24×24 como minimo (WCAG 2.2, tamano de objetivo): el texto mide
+              // 18 px y en movil costaba acertar entre ES y EN.
               className={cn(
-                "font-sans text-[0.6875rem] font-medium tracking-[0.16em] uppercase transition-colors",
+                "inline-flex min-h-6 min-w-6 items-center justify-center font-sans text-[0.6875rem] font-medium tracking-[0.16em] uppercase transition-colors",
                 isActive
                   ? "text-fg"
                   : "text-fg-subtle hover:text-fg disabled:opacity-60",

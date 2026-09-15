@@ -43,7 +43,13 @@ export function MobileMenu({
     if (!open) return;
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key !== "Escape") return;
+      onClose();
+      // El foco vuelve al boton que abrio el menu. Si no, se queda en un
+      // enlace que acaba de volverse `inert` y el teclado pierde la posicion.
+      document
+        .querySelector<HTMLElement>('[aria-controls="mobile-menu"]')
+        ?.focus();
     };
 
     const previousOverflow = document.body.style.overflow;

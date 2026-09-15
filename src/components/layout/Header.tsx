@@ -79,6 +79,11 @@ export function Header({ contact }: { contact: ResolvedContact }) {
     [locale],
   );
 
+  // Estable entre renders: el efecto del menu depende de ella, y con una
+  // funcion nueva en cada render (al cruzar el umbral de scroll, al cambiar la
+  // seccion activa) se volvia a ejecutar y robaba el foco al primer enlace.
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
+
   return (
     // El menu movil va FUERA del <header> a proposito. El header aplica
     // `backdrop-filter`, y cualquier filtro convierte al elemento en bloque
@@ -153,7 +158,7 @@ export function Header({ contact }: { contact: ResolvedContact }) {
 
       <MobileMenu
         open={menuOpen}
-        onClose={() => setMenuOpen(false)}
+        onClose={closeMenu}
         onNavigate={onNavClick}
         isHome={isHome}
         locale={locale}
